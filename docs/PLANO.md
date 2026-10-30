@@ -19,7 +19,7 @@
   alternativos de negócio. Todo dado simulado nasce em `src/mocks/`.
 - **Fases de UI:** antes de chamar o Jordan, tire screenshots com o Playwright em 1440 e 414 px. Salve cada
   um lado a lado com o frame correspondente em `docs/screenshots/` e corrija as diferenças grandes.
-  Confira também que não há overflow em 390 e 768 px.
+  Confira também que não há overflow em 390, 768 e 1024 px (768 usa o layout mobile).
 
 ## Armadilhas já verificadas
 
@@ -282,29 +282,35 @@ src/
   | `out-of-order` | Buscas mais curtas demoram mais |
   | `empty` | Catálogo vazio |
   | `session-expired` | Sessão expira durante o uso |
-  | `signup-conflict` | Conflito de e-mail ou usuário no cadastro |
-  | `coupon-expired` | Cupom expirado |
   | `price-change` | O preço de um item do carrinho sobe quando o usuário entra no checkout |
   | `sold-out` | Uma edição esgota durante a compra |
   | `order-timeout` | O pedido é criado, mas a resposta demora mais que o timeout do cliente |
   | `payment-declined` | O pagamento é recusado |
-  | `socket-drop` | O socket cai por 5 s com o pedido pendente |
-  | `duplicate-events` | Cada evento chega duas vezes, mais uma versão antiga |
 
+- **Regras fixas do mock (corte de 30/10, sem cenário próprio):**
+  - **conflito de cadastro:** e-mail ou nome de usuário já existente no banco sempre dá 409 `CONFLICT`,
+    com `fields` apontando o campo. Para reproduzir, cadastre com `colecionador@kurio.test`;
+  - **cupom:** `KURIO10` e `GENESIS5` são válidos, `EXPIRADO` sempre dá expirado e qualquer outro código
+    é inválido.
+- **Queda do socket e eventos duplicados (corte de 30/10):** só via helpers do `window.__kurio`, sem
+  cenário. O app trata os dois casos do mesmo jeito (reconexão e dedupe), só não há cenário que os ligue sozinho.
 - **Aleatoriedade:** sempre por PRNG com seed (`?seed=`).
 - **`window.__kurio`:** existe só com os mocks ligados, e o app nunca o chama. Expõe `reset`,
-  `setScenario`, `setLatency`, `emitNftUpdate`, `dropSocket` e `expireSession`. É assim que os testes
-  disparam eventos, sempre passando pelo `socket.io-client`.
+  `setScenario`, `setLatency`, `emitNftUpdate`, `emitDuplicates`, `dropSocket` e `expireSession`. É assim
+  que os testes disparam eventos, sempre passando pelo `socket.io-client`.
+  - `dropSocket(ms = 5000)`: fecha as conexões e recusa novas por `ms`;
+  - `emitDuplicates(nftId, change)`: emite o evento duas vezes, mais uma cópia com versão antiga.
 - **Painel "Cenários":** botão flutuante acessível, carregado sob demanda.
 - **REST e eventos andam juntos:** toda mudança nos dados do mock grava no banco e emite o evento. Por
   exemplo, mudar um preço grava no banco, incrementa a `version` e emite `nft.updated`.
 
 ### Interface
 
-- **Breakpoints:**
-  - abaixo de 768 px: design mobile, com cara de app;
-  - de 768 a 1023 px: design desktop, com os filtros num drawer e grid de 2 colunas;
+- **Breakpoints (corte de 30/10):** só dois layouts, separados pelo prefixo `lg:` do Tailwind.
+  - abaixo de 1024 px: design mobile, com cara de app (inclui tablet; não há layout intermediário);
   - a partir de 1024 px: desktop completo, com container de 1200 px.
+  - Tudo que o plano chama de "no desktop" / "no mobile" segue esse corte (ex.: login como dialog só a
+    partir de 1024 px).
 - **Header logado:** troque "Entrar" por avatar + menu (Perfil, Carteiras, Sair), no mesmo estilo visual.
 - **Itens fora do escopo** (lista em `docs/figma-notes.md`): ficam desabilitados, com "Em breve".
 - **Hero:** conteúdo editorial estático, com a imagem pré-carregada (`fetchpriority="high"`), para o LCP
@@ -323,7 +329,10 @@ src/
 
 ## Fases
 
-### Fase 1 — Fundação e risco técnico (alvo: qui 16h–18h30)
+> **Cronograma refeito em 30/10:** começamos um dia atrasado. Tudo termina sábado às 11h30
+> (30 min de folga até o prazo). Há uma pausa de sex 0h30 a sáb 6h; se uma fase estourar, o Plano B decide o corte.
+
+### Fase 1 — Fundação e risco técnico (alvo: sex até 17h30)
 
 1. **Scaffold:** Vite + React + TS strict, a stack instalada, Tailwind v4 com `src/styles/theme.css`,
    shadcn, fontes e ESLint.
@@ -347,7 +356,7 @@ src/
 **Pronto quando:** o deploy público funciona com REST e socket mockados, e o smoke test passa tanto
 local quanto contra a URL.
 
-### Fase 2 — Contratos e backend simulado (alvo: qui 18h30–22h30)
+### Fase 2 — Contratos e backend simulado (alvo: sex 17h30–20h)
 
 1. Schemas Zod de todos os recursos e do envelope de erro, em `src/shared/contracts`.
 2. `src/shared/money`, com testes unitários:
@@ -364,7 +373,7 @@ local quanto contra a URL.
 **Pronto quando:** todos os endpoints respondem conforme o contrato (valide com os schemas), os
 cenários podem ser escolhidos e o reset restaura tudo.
 
-### Fase 3 — Catálogo e detalhe (alvo: sex 8h30–12h)
+### Fase 3 — Catálogo e detalhe (alvo: sex 20h–22h30)
 
 1. **Layout:** header (com busca e badge do carrinho), footer e tab bar mobile.
 2. **Início, desktop e mobile, fiel aos frames:**
@@ -376,26 +385,28 @@ cenários podem ser escolhidos e o reset restaura tudo.
    - galeria, edições e quantidade com limite;
    - favoritar com atualização otimista (sem login, leva ao login);
    - comprar e adicionar ao carrinho;
-   - NFT inexistente, edição indisponível e relacionados.
+   - NFT inexistente e edição indisponível;
+   - "Mais desta coleção" e "Colecionadores também viram" como uma linha estática de cards, sem
+     carrossel (corte de 30/10), alimentada por `GET /nfts/:id/related`.
 4. `nft.updated` refletindo no catálogo e no detalhe.
 5. E2E: cenários 1, 2 e 12 do enunciado.
 
-### Fase 4 — Conta e carrinho (alvo: sex 13h–16h)
+### Fase 4 — Conta e carrinho (alvo: sex 22h30–sáb 0h30)
 
 1. **Login e cadastro:**
-   - dialog no desktop e página no mobile;
-   - validação, conflito e retorno ao fluxo anterior;
+   - dialog a partir de 1024 px e página abaixo disso;
+   - validação, conflito (regra fixa do mock) e retorno ao fluxo anterior;
    - sessão recuperada no refresh e expiração durante a navegação;
    - logout limpando o cache e o socket.
 2. **Carrinho, desktop e mobile:**
    - quantidades com limite e remoção;
-   - cupom, incluindo inválido e expirado;
+   - cupom, incluindo inválido e expirado (regras fixas do mock);
    - resumo vindo da cotação;
    - persistência no refresh e merge do carrinho de visitante no login;
    - aviso de preço e disponibilidade em tempo real.
 3. E2E: cenários 3, 4 e 5.
 
-### Fase 5 — Checkout, pedido e confirmação (alvo: sex 16h–20h)
+### Fase 5 — Checkout, pedido e confirmação (alvo: sáb 6h–8h30)
 
 1. **Pagamento:** no desktop, o formulário do Figma e a etapa de revisão; no mobile, a seleção de carteira.
 2. **Carteiras:** usar as cadastradas, escolher a rede e simular a conexão (aprovada, recusada e desconectada).
@@ -407,14 +418,14 @@ cenários podem ser escolhidos e o reset restaura tudo.
    - carrinho perdendo só os itens comprados.
 4. E2E: cenários 6, 7, 9 e 10. Use `page.clock` onde houver espera de tempo.
 
-### Fase 6 — Perfil e carteiras (alvo: sex 20h30–22h30)
+### Fase 6 — Perfil e carteiras (alvo: sáb 8h30–9h15)
 
 1. **Perfil:** dados, avatar (alterar e remover), alteração de senha e erros da API exibidos nos campos.
 2. **Carteiras:** principal e secundária (com "Igual à principal") e validação.
 3. Versões mobile, mesmo sem frame, no mesmo padrão visual.
 4. E2E: cenário 8.
 
-### Fase 7 — Testes finais e regressão visual (alvo: sáb 7h30–9h30)
+### Fase 7 — Testes finais e regressão visual (alvo: sáb 9h15–10h15)
 
 1. E2E do cenário 11: teclado, foco em dialogs e validação de formulários.
 2. Regressão visual com `toHaveScreenshot`:
@@ -424,7 +435,7 @@ cenários podem ser escolhidos e o reset restaura tudo.
    Playwright (Linux). Se não houver, gere localmente e documente no README como regenerar.
 4. Rode tudo nos dois projetos, elimine testes instáveis e garanta que cada teste parte de um estado isolado.
 
-### Fase 8 — Lighthouse, documentação e entrega (alvo: sáb 9h30–11h30)
+### Fase 8 — Lighthouse, documentação e entrega (alvo: sáb 10h15–11h30)
 
 1. **Lighthouse:**
    - versione os `lighthouserc` de mobile e de desktop;
@@ -446,7 +457,7 @@ cenários podem ser escolhidos e o reset restaura tudo.
    - o refresh numa rota interna funciona;
    - todos os comandos do README rodam.
 
-## Plano B (se a Fase 5 não estiver pronta na sexta às 20h)
+## Plano B (se a Fase 5 não estiver pronta no sábado às 8h30)
 
 **Nunca cortar:**
 - a compra de ponta a ponta, confirmada pela simulação;
@@ -454,13 +465,16 @@ cenários podem ser escolhidos e o reset restaura tudo.
 - os eventos passando pelo `socket.io-client`;
 - os testes E2E executáveis.
 
+**Já cortado em 30/10** (registrar no ARCHITECTURE.md): layout de tablet (abaixo de 1024 px vale o
+mobile), carrosséis (viraram linha estática de cards), cenários `signup-conflict` e `coupon-expired`
+(viraram regras fixas do mock) e cenários `socket-drop` e `duplicate-events` (ficaram só nos helpers
+do `window.__kurio`).
+
 **Cortar nesta ordem:**
 
-1. Carrosséis "Mais desta coleção" e "Colecionadores também viram".
-2. "Diário da Cunhagem" e promo cards (deixar uma versão estática simples).
-3. Polimento de tablet (só garantir que não quebra).
-4. Regressão visual no mobile (manter a do desktop).
-5. Avatar (manter dados e senha).
-6. Lighthouse desktop (manter o mobile).
+1. "Diário da Cunhagem" e promo cards (deixar uma versão estática simples).
+2. Regressão visual no mobile (manter a do desktop).
+3. Avatar (manter dados e senha).
+4. Lighthouse desktop (manter o mobile).
 
 Registre cada corte no ARCHITECTURE.md, dizendo o que seria feito com mais tempo.
