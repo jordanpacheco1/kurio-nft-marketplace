@@ -425,3 +425,40 @@ estático pré-carregado da Fase 3 ele deve cair.
 - Fase 7: cenário 11 (teclado, foco em dialogs e validação de formulários) e regressão visual.
 - Fase 8: Lighthouse, README/ARCHITECTURE (registrar os desvios das Fases 3–6) e entrega.
 - Próxima: Fase 7.
+
+## Fase 7 — Testes finais e regressão visual
+
+**Status:** concluída em 30/10.
+
+### Feito
+
+- **Cenário 11** (`e2e/a11y.spec.ts`, desktop e mobile): link "Pular para o conteúdo" (primeiro Tab, visível,
+  leva o próximo Tab para o `<main>`); do card ao carrinho só com teclado (Enter no card, setas nas edições,
+  Enter/Espaço em quantidade e "Adicionar ao carrinho", anúncio no `aria-live`, remover a linha); dialog de login
+  (foco preso com Tab/Shift+Tab, envio com Enter, foco no primeiro inválido, erro geral em `role=alert`, Escape
+  fecha, login só com teclado); login mobile com Enter; zoom da galeria (Escape devolve o foco à lupa); menu da
+  conta pelas setas (Escape devolve o foco ao avatar).
+- **Bug corrigido:** remover a linha focada do carrinho jogava o foco no `<body>`. Agora vai para o próximo
+  "Remover" ou, com o carrinho vazio, para o título "Seu carrinho está vazio" (`useKeepFocusOnRemove`).
+- **Regressão visual** (`e2e/visual.spec.ts`): início, detalhe, carrinho (Emerald ×2, Violet ×6, Ivory ×9 na
+  Aberta, como visitante) e pagamento (logado, mesmo carrinho), `fullPage`, nos dois projetos. Seed padrão,
+  latência zero, `page.clock.setFixedTime`, `reducedMotion: 'reduce'`, `animations: 'disabled'`, imagens
+  `lazy` forçadas para `eager` e espera das fontes e dos skeletons.
+- **Baselines no Docker** (Linux, `mcr.microsoft.com/playwright:v1.64.1-noble`): `scripts/visual.mjs`,
+  `npm run test:visual` e `npm run test:visual:update`. Fora do Linux o spec é pulado (ou `VISUAL=1`).
+  README com a seção "Regressão visual".
+- **Estabilidade:** visual 3× seguidas no Docker (24/24); suíte inteira com `--repeat-each=2` no Windows:
+  **210 passando, 70 pulados** (por execução: 105 passando, 35 pulados = contrato só no desktop, testes de um
+  layout só e os 8 visuais fora do Linux). Cada teste parte de um contexto novo (banco da seed).
+
+### Observações
+
+- No mobile, os screenshots `fullPage` mostram a tab bar/barra de compra fixas na altura do viewport (844 px),
+  sobre o conteúdo. É determinístico; foi mantido para a barra também entrar na comparação.
+- Um `vite preview` antigo na porta 4173 é reaproveitado pelo Playwright (`reuseExistingServer`): rode
+  `npm run build` antes do `test:e2e` se ele estiver de pé, senão os testes rodam no build velho.
+
+### Pendências
+
+- Fase 8: Lighthouse, README completo/ARCHITECTURE e entrega.
+- Próxima: Fase 8.
