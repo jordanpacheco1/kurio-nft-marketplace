@@ -209,4 +209,83 @@ estático pré-carregado da Fase 3 ele deve cair.
 - O `RealtimeBridge` continua sem token (Fase 4). Carrinho no tempo real (aviso de preço): Fase 4.
 - Fase 7: regressão visual.
 - Fase 8: Lighthouse. O preload do hero vale para todas as rotas; ver se pesa no detalhe.
-- Próxima: Fase 4.
+- Fase 4 concluída (abaixo).
+
+## Fase 4 — Conta e carrinho
+
+**Status:** concluída em 30/10. Screenshots lado a lado com o Figma: `docs/screenshots/fase4-*.png`.
+
+### Feito
+
+- **Sessão** (`features/auth/`):
+  - token reativo (`useToken` com `useSyncExternalStore`, inclusive entre abas);
+  - login e cadastro: validação com Zod no cliente, erros da API por campo (`aria-describedby`), foco no
+    primeiro campo inválido e retorno ao `redirect` (só caminhos internos);
+  - o conflito de cadastro (regra fixa do mock) aponta e-mail e usuário;
+  - a sessão volta depois do refresh (`GET /auth/session`);
+  - **expiração:** qualquer 401 `SESSION_EXPIRED` (ou `UNAUTHENTICATED` com token salvo) em query ou
+    mutation passa pelo `QueryCache`/`MutationCache`. O `SessionWatcher` limpa a sessão e leva a
+    `/login?redirect=<tela atual>&reason=expired`, que mostra o aviso e volta para a mesma tela depois;
+  - **login/troca de usuário:** cancela e remove `['me']`, faz o merge do carrinho de visitante (com o token
+    explícito, antes de publicá-lo, para nenhuma query buscar o carrinho antes do merge), gira o `X-Cart-Id`
+    e avisa se alguma quantidade foi ajustada ao estoque;
+  - **logout:** `POST /auth/logout`, remove `['me']` e `['session']`, cancela as requisições privadas e limpa
+    os avisos do carrinho;
+  - **socket:** o `RealtimeBridge` depende do token. A cada login, logout ou troca, fecha o socket anterior
+    (e os listeners) e abre outro com o token novo.
+- **Rotas:** `/login` e `/cadastro` (dialog a partir de 1024 px sobre o hero da home; página abaixo disso,
+  sem tab bar nem footer); `requireAuth` no `beforeLoad` de `/perfil/*` e `/checkout`; quem já está logado
+  e abre `/login` segue direto para o destino.
+- **Header logado:** avatar (inicial ou foto) + menu Perfil, Carteiras e Sair (dropdown do shadcn). Na tab
+  bar, Favoritos e Perfil apontam para as rotas protegidas (o guard faz o resto).
+- **Carrinho** (`/carrinho`, público):
+  - desktop: tabela com colunas fixas, lixeira, −/+ e "Colecionadores também viram"; mobile: cards e sheet de
+    resumo fixo no rodapé (sticky), com cupom em pílula e CTA em gradiente;
+  - quantidade até o estoque e o limite de 10. Se o estoque caiu abaixo da quantidade, a linha avisa,
+    só deixa diminuir e o "Conectar e finalizar" fica bloqueado até ajustar;
+  - cupom com erro no próprio campo (inválido e expirado), cupom aplicado com "Remover cupom";
+  - **o resumo usa os valores que a API calcula no carrinho** (subtotal, desconto, taxa estimada e total);
+    o cliente não soma nada. Toda mutation devolve o carrinho inteiro e substitui o cache;
+  - estados de carregamento, vazio, erro com "Tentar de novo" e linha ocupada (`aria-busy`);
+  - "Conectar e finalizar" vai para `/checkout` (o guard pede login e o merge preserva os itens).
+- **Tempo real no carrinho:** `nft.updated` com uma edição que está em algum carrinho do cache gera os avisos
+  "O preço de X mudou de A para B" e "Só restam N unidades…/esgotou", anunciados no `aria-live` e mostrados
+  na tela até serem dispensados. Depois invalida o carrinho e a cotação (`['me', id, 'quote']`, Fase 5).
+  Na reconexão do socket, carrinho e cotação também são invalidados.
+- **E2E** (desktop e mobile):
+  - `auth.spec.ts` (cenário 3 e parte do 4): cadastro com validação, conflito e sucesso + refresh; senha
+    errada e retorno ao NFT, com favorito salvo depois do refresh; rota protegida; sessão expirada no
+    carrinho voltando para `/carrinho`; logout e troca de usuário sem vazar favoritos, carrinho nem socket;
+  - `cart.spec.ts` (cenário 5): quantidades até o limite, remoção, cupom inválido/expirado/válido, resumo
+    igual ao da API, persistência no refresh, merge do visitante no login via `/checkout` e preço/estoque
+    em tempo real bloqueando e liberando a finalização.
+  - **Resultado: 67 passando, 21 pulados (contrato só no desktop).** Sem overflow em 390, 768 e 1024 px nas
+    três telas novas.
+
+### Decisões e desvios do Figma
+
+- **Resumo do carrinho:** vem do carrinho calculado pela API (mesma regra da cotação). A cotação de verdade,
+  com a rede escolhida, fica no checkout (Fase 5), porque `POST /quotes` exige login e o visitante também
+  tem carrinho. A taxa aparece como "Taxa estimada (Ethereum)".
+- **Labels:** o Figma só tem placeholder; os campos têm `<label>` só para leitor de tela (exceto o cupom
+  no desktop, que tem o rótulo visível do frame).
+- **Login desktop:** o fundo é o hero da home (inerte), não a home inteira, porque a home depende dos
+  search params de `/`. Fechar o dialog volta para o `redirect`, ou para `/` se o destino for protegido.
+- **Mercado** fica ativo no header também no carrinho, como no frame.
+- **Desconto:** `(-) 0.00 ETH` em vez do `(-) 00.00` do Figma (defeito listado).
+- **Carrinho desktop:** a linha mostra "ID do token: #0042 · 1/50" (o Figma não mostra a edição no
+  desktop; sem ela, duas edições do mesmo NFT ficariam iguais). Remover tem nome acessível com a edição.
+- **Mobile:** sem tab bar no carrinho (o sheet de resumo ocupa o rodapé, como no frame), sem footer no
+  carrinho e no login/cadastro.
+- "Esqueceu a senha?", Google e Facebook ficam desabilitados com "Em breve".
+- `/perfil`, `/perfil/carteiras`, `/perfil/favoritos` e `/checkout` são telas provisórias já protegidas.
+  O `/perfil` provisório tem "Sair da conta" (no mobile não há outro lugar para sair).
+- Testes: o `catalog.spec` esperava o MSW depois do reload antes de chamar a API direto (corrida do teste).
+
+### Pendências
+
+- Fase 5: checkout usa `requireAuth`, a key `['me', userId, 'quote']` (já invalidada pelos eventos) e o
+  rascunho no `sessionStorage` quando a sessão expira (o `SessionWatcher` já manda para o login com
+  `redirect=/checkout&reason=expired`; falta salvar e restaurar o rascunho).
+- Fase 6: substituir os placeholders de `/perfil/*`; a foto do avatar no header já usa `user.avatarUrl`.
+- Próxima: Fase 5.
