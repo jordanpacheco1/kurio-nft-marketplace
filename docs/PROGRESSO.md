@@ -288,4 +288,84 @@ estático pré-carregado da Fase 3 ele deve cair.
   rascunho no `sessionStorage` quando a sessão expira (o `SessionWatcher` já manda para o login com
   `redirect=/checkout&reason=expired`; falta salvar e restaurar o rascunho).
 - Fase 6: substituir os placeholders de `/perfil/*`; a foto do avatar no header já usa `user.avatarUrl`.
-- Próxima: Fase 5.
+- Fase 5 concluída (abaixo).
+
+## Fase 5 — Checkout, pedido e confirmação
+
+**Status:** concluída em 30/10. Screenshots lado a lado com o Figma: `docs/screenshots/fase5-*.png`.
+
+### Feito
+
+- **Pagamento** (`/checkout`, `features/checkout/`):
+  - desktop: formulário "Perfil do colecionador" do Figma, pré-preenchido com o perfil (`GET /me/profile`),
+    validado com o `collectorSchema` da API (erros por campo, foco no primeiro inválido); coluna "Seus NFTs"
+    com as linhas e totais da **cotação** (`POST /quotes`, key `['me', userId, 'quote', network]`);
+  - mobile: só a escolha de carteira e rede + total. Os dados do colecionador vêm do perfil; se faltar algo
+    (ex.: sem ENS), um sheet pede **só os campos que faltam**;
+  - **etapa de revisão** nos dois layouts: "Confirmar compra" valida, exige carteira conectada, refaz a
+    cotação e mostra "Revise sua compra" com o botão "Pagar X ETH";
+  - **cotação mudou** (`nft.updated` invalida a cotação que tem o NFT, revalidação ou `QUOTE_STALE`, que já
+    traz a cotação nova): lista o que mudou (preço, quantidade, itens, cupom, taxa, total), anuncia no
+    `aria-live` e trava a compra até "Aceitar novos valores". Item sem estoque: a cotação falha com
+    `OUT_OF_STOCK`, a compra trava e aparece "Ajustar o carrinho";
+  - **rascunho** (dados, carteira e rede) no `sessionStorage` por usuário (`kurio.checkoutDraft.<id>`),
+    salvo a cada mudança: volta depois do login quando a sessão expira no meio.
+- **Carteiras** (`features/wallets/`): as cadastradas como rádios (provider, endereço, rede, "Conectada");
+  escolher uma ajusta a rede. Conexão simulada: conectar, recusada (`wallet-rejected`) e desconectar.
+  Sem carteira: link para `/perfil/carteiras` (tela da Fase 6).
+- **Pedido** (`features/orders/`):
+  - `Idempotency-Key` por tentativa no `sessionStorage` (`kurio.checkoutAttempt.<id>`): mesmo corpo → mesma
+    chave (duplo clique, timeout, "Tentar de novo"); cotação nova reconfirmada → corpo novo → chave nova;
+  - o `POST /orders` tenta de novo **uma vez** em falha transitória (timeout de 10 s), com a mesma chave;
+  - botão travado enquanto a mutation está pendente;
+  - `/pedidos/$orderId` (protegida) num dialog: processando, recusado (com o motivo, "Tentar de novo" e
+    "Ir para o carrinho") ou o **recibo** do Figma (snapshot da API; "Ver no Etherscan/Polygonscan/Solscan"
+    é link simulado);
+  - **`order.updated`** no `sync.ts`: descarta evento de outro usuário (`userId` ≠ sessão atual), dedupe e
+    versão pelo processador, pedido terminal nunca muda. Anuncia confirmação/recusa;
+  - **retomada:** `kurio.pendingOrder` no `localStorage`; o `PendingOrderWatcher` (no layout raiz) busca o
+    pedido no boot/refresh, a reconexão do socket invalida pedidos pendentes, e ao terminar ele limpa o
+    registro, invalida carrinho e cotação e mostra um toast ("Ver recibo") se o usuário estiver em outra
+    tela. Com pedido pendente, o checkout mostra o aviso e não deixa comprar de novo.
+- **Mock:** o `dropSocket` fechava as conexões recusadas antes do handshake do Engine.IO; o cliente nunca
+  recebia o `close` e a tentativa ficava pendurada até o timeout de 20 s do Manager. Agora o binding abre
+  a conexão e ela é fechada no tick seguinte (o cliente vê `connect` + `transport close` até a queda acabar).
+- **E2E** (`checkout.spec.ts`, desktop e mobile):
+  - cenário 6: do card do catálogo ao recibo (login no meio), estoque baixando uma vez, recibo imutável
+    depois de mudar o preço, carrinho vazio depois;
+  - cenário 7: recusa mantendo o carrinho + nova tentativa confirmada; duplo clique + `order-timeout` com
+    `page.clock` (`fastForward`), conferindo que todos os `POST /orders` usaram a mesma chave e que houve
+    uma compra só;
+  - cenário 9: preço mudando no formulário e na revisão (aviso, trava, aceitar e pagar com o preço novo),
+    estoque abaixo da quantidade e `sold-out` na hora de pagar;
+  - cenário 10: `emitDuplicates` sem regredir o preço, queda do socket com pedido pendente (o
+    `order.updated` se perde e o REST reconcilia na reconexão) e saída da tela no meio do processamento;
+  - validação do formulário + rascunho restaurado após sessão expirada (desktop) e sheet de dados
+    faltantes (mobile); carteira recusada/aprovada/desconectada.
+  - **Resultado: 89 passando, 23 pulados (contrato só no desktop + 2 testes específicos de um layout).**
+
+### Decisões e desvios do Figma
+
+- **Carteira e rede:** o Figma lista provedores (MetaMask, Coinbase, WalletConnect). Como a API conecta as
+  carteiras **cadastradas** (`POST /wallet-sessions { walletId }`), a lista mostra as carteiras do usuário
+  com o provedor como etiqueta, e o botão "Conectar <provedor>". No desktop, "Endereço da carteira" e "Tipo
+  de carteira" ficam só leitura (vêm da carteira escolhida) e "Usar outra carteira?" troca para a outra.
+- **Rede:** select no formulário desktop (como no Figma); rádios no mobile. Escolher a carteira ajusta a rede.
+- **Código de indicação** é opcional (defeito do Figma). "Nome ENS" tem o sufixo `.eth` fixo.
+- **Desconto** aparece na cotação e no recibo só quando existe; código promocional é aplicado no carrinho
+  (o checkout tem o link "Aplique no carrinho").
+- **Revisão:** etapa extra (não está no Figma), exigida pelo plano para a revalidação antes de confirmar.
+- **Recibo:** data no formato curto do Figma (`30 out, 2026`); ID da transação abreviado com o hash completo
+  no `title`; o texto final cita a carteira usada.
+- **Mobile:** sem tab bar e sem footer no pagamento (CTA fixo no rodapé, como no frame); "Trocar carteira"
+  virou "Gerenciar carteiras" (leva a `/perfil/carteiras`).
+
+### Pendências
+
+- Fase 6: `/perfil`, `/perfil/carteiras` e `/perfil/favoritos` (os links "Gerenciar carteiras" e
+  "Cadastrar carteira" do checkout já apontam para lá).
+- Fase 7: regressão visual do pagamento (usar o mesmo carrinho dos screenshots: Emerald ×2, Violet ×6,
+  Ivory ×9 na edição Aberta).
+- `cn` (pacote `cn`) junta `text-caption` com cores `text-*` e remove o tamanho: concatenar a classe
+  quando misturar tamanho e cor customizados.
+- Próxima: Fase 6.
