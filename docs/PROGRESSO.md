@@ -100,9 +100,9 @@ estático pré-carregado da Fase 3 ele deve cair.
   - headers `Authorization` e `X-Cart-Id`, e arrays repetidos na query string;
   - o retry das queries usa `isTransient`.
 - **Testes:**
-  - `e2e/api-contract.spec.ts`: 21 testes, só no desktop, que validam cada endpoint com os schemas,
+  - `e2e/api-contract.spec.ts`: 24 testes, só no desktop, que validam cada endpoint com os schemas,
     passando pelo service worker;
-  - smoke atualizado (9 cards). **E2E: 24 passando, 21 pulados no mobile (contrato).**
+  - smoke atualizado (9 cards). **E2E: 27 passando, local e contra a URL pública (21 pulados: o contrato não roda no mobile).**
 
 ### Decisões e desvios
 
