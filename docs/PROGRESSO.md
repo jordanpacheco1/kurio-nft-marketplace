@@ -461,4 +461,40 @@ estático pré-carregado da Fase 3 ele deve cair.
 ### Pendências
 
 - Fase 8: Lighthouse, README completo/ARCHITECTURE e entrega.
-- Próxima: Fase 8.
+- Fase 8 concluída (abaixo).
+
+## Fase 8 — Lighthouse, documentação e entrega
+
+**Status:** concluída em 30/10. Deploy: https://kurio-nft-marketplace-sooty-mu.vercel.app
+
+### Feito
+
+- **Lighthouse:** `lighthouserc.mobile.json` e `lighthouserc.desktop.json` (3 rodadas em `/` e no detalhe);
+  `npm run lighthouse` (`scripts/lighthouse.mjs`) faz o build, roda os dois perfis e grava as medianas
+  (categorias + FCP, LCP, TBT, CLS), versões e ambiente em `lighthouse/SUMMARY.md`, anexando `lighthouse/NOTES.md`.
+  Resultado: desktop 98/100/100/100 nas duas páginas; mobile 70–75 de performance e 99–100 no resto.
+- **Bug de classes (achado pelo contraste do Lighthouse):** todos os componentes importavam o `cn` do pacote
+  `cn` sem configuração, e `text-caption`/`text-body`/etc. contavam como cor, derrubando a cor vizinha (ou o
+  contrário). Agora `src/lib/utils.ts` exporta um `cn` com `createCn` e a escala de texto do tema; `clsx` e
+  `tailwind-merge` saíram das dependências. Vários textos mudaram para o que estava escrito (CTA escuro sobre
+  cobre, chips de edição em 13 px, resumo do carrinho numa linha), mais perto do Figma. Baselines visuais
+  regeneradas no Docker; login, cadastro, perfil e carteiras conferidos por screenshot.
+- **Performance:** alias do `react-iconly` para o build ESM fatiado (chunk principal 189 → 108 kB gzip);
+  skeleton do detalhe com altura mínima (CLS desktop 0,22 → 0,005); `public/robots.txt` (SEO 92 → 100).
+- **Docs:** `README.md` completo (setup, variáveis, credenciais, comandos, cenários e reset, tabela de como
+  reproduzir cada falha, testes) e `ARCHITECTURE.md` (contratos, sessão, carrinho, cache, checkout,
+  reconciliação REST × socket, limitações do binding, decisões de UX, desvios do Figma, cortes e performance).
+- **Checklist:** clone limpo + `npm ci` + `build` + `lint` + `npm test` ok; deploy com mocks e socket (smoke e
+  suíte completa contra a URL pública: 105 passando, 35 pulados); refresh em rotas internas devolve 200;
+  `/api/*` fora do mock dá 404. Suíte local: 105 passando, 35 pulados; visual no Docker 8/8.
+
+### Observações
+
+- Contra o deploy, `api-contract` › "empty, offline, flaky e falha forçada" falhou uma vez (desktop) e passou
+  na repetição; é sensível à latência da rede real. Localmente é estável.
+- Performance mobile abaixo de 90: SPA sem SSR com 4G lento e CPU 4×; justificativa e próximos passos
+  (prerender do shell/hero, menu do Radix sob demanda, subset de fontes) em `lighthouse/NOTES.md`.
+
+### Pendências
+
+- Nenhuma obrigatória. Entrega: mandar o link do repositório e do deploy ao recrutador.
