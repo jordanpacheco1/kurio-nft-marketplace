@@ -1,34 +1,85 @@
-import { Link } from '@tanstack/react-router'
-import { Button } from '@/components/ui/button'
+import { Link, useLocation } from '@tanstack/react-router'
+import { cn } from 'cn'
+import { useState } from 'react'
+import { Buy, Login, Search } from 'react-iconly'
+import { SearchField } from '@/features/catalog/components/search-field'
+import { useCartCount } from '@/features/cart/queries'
+import { Icon } from '@/shared/ui/icon'
 
-// Versão simplificada da Fase 1; a busca, o carrinho e o menu logado entram na Fase 3.
-const soon = ['Mercado', 'Criadores', 'Aprenda']
+const navItem =
+  'relative py-1 text-body text-fg hover:text-copper-text after:absolute after:inset-x-0 after:-bottom-[21px] after:h-0.5 after:bg-transparent'
+const navActive = 'font-bold text-copper-text after:bg-copper'
 
+// Header do desktop. No mobile cada tela tem o próprio topo e a navegação fica na tab bar.
 export function SiteHeader() {
+  const { pathname } = useLocation()
+  const count = useCartCount()
+  const [searchOpen, setSearchOpen] = useState(false)
+  const onHome = pathname === '/'
+  const onMarket = pathname.startsWith('/nft/')
+
   return (
-    <header className="border-b border-border">
-      <div className="mx-auto flex h-[45px] max-w-page items-center justify-between gap-4 px-4">
-        <Link to="/" className="text-xs font-bold tracking-widest text-fg">
+    <header className="hidden border-b border-border lg:block">
+      <div className="page-container grid h-[70px] grid-cols-[1fr_auto_1fr] items-center gap-6">
+        <Link to="/" className="w-fit text-xs font-bold tracking-widest text-fg">
           KURIO
         </Link>
-        <nav aria-label="Principal" className="hidden gap-8 text-sm lg:flex">
-          <Link
-            to="/"
-            className="text-fg-secondary hover:text-fg"
-            activeProps={{ className: 'text-copper-text underline decoration-copper underline-offset-[14px]' }}
-            activeOptions={{ exact: true }}
-          >
+
+        <nav aria-label="Principal" className="flex gap-9">
+          <Link to="/" aria-current={onHome ? 'page' : undefined} className={cn(navItem, onHome && navActive)}>
             Início
           </Link>
-          {soon.map((label) => (
-            <span key={label} aria-disabled="true" title="Em breve" className="cursor-not-allowed text-fg-muted">
+          <Link to="/" hash="catalogo" aria-current={onMarket ? 'page' : undefined} className={cn(navItem, onMarket && navActive)}>
+            Mercado
+          </Link>
+          {['Criadores', 'Aprenda'].map((label) => (
+            <span key={label} aria-disabled="true" title="Em breve" className="cursor-not-allowed py-1 text-body text-fg-muted">
               {label}
+              <span className="sr-only"> (em breve)</span>
             </span>
           ))}
         </nav>
-        <Button size="sm" disabled title="Em breve">
-          Entrar
-        </Button>
+
+        <div className="flex items-center justify-end gap-5">
+          {searchOpen ? (
+            <SearchField
+              autoFocus
+              placeholder="Buscar NFTs"
+              onEscape={() => setSearchOpen(false)}
+              className="w-[200px]"
+              inputClassName="h-9 text-sm"
+            />
+          ) : (
+            <button
+              type="button"
+              aria-label="Abrir busca"
+              onClick={() => setSearchOpen(true)}
+              className="text-fg hover:text-copper-text focus-visible:outline-2 focus-visible:outline-copper"
+            >
+              <Icon as={Search} size={22} />
+            </button>
+          )}
+          <Link to="/carrinho" aria-label={`Carrinho, ${count} ${count === 1 ? 'item' : 'itens'}`} className="relative text-fg hover:text-copper-text">
+            <Icon as={Buy} size={22} />
+            {count > 0 && (
+              <span
+                data-testid="cart-badge"
+                aria-hidden="true"
+                className="absolute -top-1.5 -right-2 grid min-w-4 place-items-center rounded-full bg-copper px-1 text-tiny font-bold text-ink"
+              >
+                {count}
+              </span>
+            )}
+          </Link>
+          <Link
+            to="/login"
+            search={{ redirect: pathname === '/login' ? undefined : pathname }}
+            className="flex items-center gap-1 rounded-sm bg-copper px-2 py-1 text-sm text-ink hover:bg-copper-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-copper"
+          >
+            <Icon as={Login} size={18} />
+            Entrar
+          </Link>
+        </div>
       </div>
     </header>
   )

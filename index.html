@@ -6,6 +6,15 @@
     <meta name="description" content="Kurio — marketplace de NFTs de arte digital, música e colecionáveis." />
     <meta name="theme-color" content="#140d0a" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- Imagem do hero: o LCP da home não espera o boot dos mocks. -->
+    <link
+      rel="preload"
+      as="image"
+      type="image/avif"
+      imagesrcset="/nfts/ape-emerald-320.avif 320w, /nfts/ape-emerald-640.avif 640w, /nfts/ape-emerald-1024.avif 1024w"
+      imagesizes="(min-width: 1024px) 450px, 160px"
+      fetchpriority="high"
+    />
     <title>Kurio — Marketplace de NFTs</title>
   </head>
   <body>
