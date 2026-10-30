@@ -22,6 +22,16 @@ function requireWallet(userId: string, walletId: string) {
   return wallet
 }
 
+/** Regra fixa do mock: o mesmo endereço não pode estar em duas contas (dá para repetir entre as suas carteiras). */
+function assertAddressFree(userId: string, address: string | undefined) {
+  if (!address) return
+  if (db.wallets.some((item) => item.userId !== userId && item.address.toLowerCase() === address.toLowerCase())) {
+    fail('CONFLICT', 'Este endereço já está ligado a outra conta.', {
+      fields: { address: 'Endereço já cadastrado em outra conta' },
+    })
+  }
+}
+
 export const walletHandlers = [
   route('get', '/me/wallets', ({ request }) => {
     const { user } = requireUser(request)
@@ -37,6 +47,7 @@ export const walletHandlers = [
         fields: { slot: 'Posição já ocupada' },
       })
     }
+    assertAddressFree(user.id, input.address)
     const wallet: WalletRecord = {
       ...input,
       id: `w-${crypto.randomUUID().slice(0, 8)}`,
@@ -51,6 +62,7 @@ export const walletHandlers = [
     const { user } = requireUser(request)
     const wallet = requireWallet(user.id, params.id!)
     const input = await readBody(request, walletUpdateSchema)
+    assertAddressFree(user.id, input.address)
     Object.assign(wallet, input, { updatedAt: new Date().toISOString() })
     return HttpResponse.json<Wallet>(toWallet(wallet))
   }),

@@ -23,7 +23,7 @@ Envelope único: `{ "error": { "code", "message", "fields"?, "quote"? } }`.
 | 401 | `SESSION_EXPIRED` | Token vencido. A sessão é apagada. |
 | 403 | `FORBIDDEN` | Pedido de outro usuário, carrinho de usuário acessado sem sessão, carteira recusou a conexão. |
 | 404 | `NOT_FOUND` | Recurso inexistente. Carteira de outro usuário também responde 404, para não revelar que existe. |
-| 409 | `CONFLICT` | E-mail ou usuário já cadastrado (`fields` aponta o campo), posição de carteira já ocupada. |
+| 409 | `CONFLICT` | E-mail ou usuário já cadastrado (`fields` aponta o campo), posição de carteira já ocupada, endereço de carteira já ligado a outra conta. |
 | 409 | `OUT_OF_STOCK` | Quantidade acima do estoque da edição. |
 | 409 | `QUOTE_STALE` | A cotação não vale mais. `quote` já traz a cotação nova, quando dá para cotar de novo. |
 | 409 | `IDEMPOTENCY_CONFLICT` | `Idempotency-Key` reutilizada com outro corpo. |
@@ -165,8 +165,8 @@ na primeira chamada. Um id de carrinho de usuário enviado sem a sessão dá 403
 | Método e rota | Corpo | Resposta |
 | --- | --- | --- |
 | `GET /me/wallets` | — | `{ items: Wallet[] }` (principal primeiro) |
-| `POST /me/wallets` | `{ slot, label, address, network, provider }` | 201 `Wallet` · 409 posição ocupada · 422 |
-| `PATCH /me/wallets/:id` | parcial, sem `slot` | `Wallet` · 404 |
+| `POST /me/wallets` | `{ slot, label, address, network, provider }` | 201 `Wallet` · 409 posição ocupada ou endereço de outra conta · 422 |
+| `PATCH /me/wallets/:id` | parcial, sem `slot` | `Wallet` · 404 · 409 endereço de outra conta · 422 |
 | `GET /wallet-sessions/current` | — | `{ session: WalletSession \| null }` |
 | `POST /wallet-sessions` | `{ walletId, network }` | 201 `WalletSession` · 403 no cenário `wallet-rejected` |
 | `DELETE /wallet-sessions/:id` | — | 204 · 404 |

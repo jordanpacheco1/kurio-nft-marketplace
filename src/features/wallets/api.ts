@@ -1,10 +1,27 @@
 import { z } from 'zod'
 import { api } from '@/shared/api/client'
-import { walletListSchema, walletSessionSchema, type WalletSessionInput } from '@/shared/contracts'
+import {
+  walletListSchema,
+  walletSchema,
+  walletSessionSchema,
+  type WalletInput,
+  type WalletSessionInput,
+  type WalletUpdate,
+} from '@/shared/contracts'
 
 export async function fetchWallets(signal?: AbortSignal) {
   const { data } = await api.get('/me/wallets', { signal })
   return walletListSchema.parse(data).items
+}
+
+export async function createWallet(input: WalletInput) {
+  const { data } = await api.post('/me/wallets', input)
+  return walletSchema.parse(data)
+}
+
+export async function updateWallet(walletId: string, input: WalletUpdate) {
+  const { data } = await api.patch(`/me/wallets/${encodeURIComponent(walletId)}`, input)
+  return walletSchema.parse(data)
 }
 
 export async function fetchWalletSession(signal?: AbortSignal) {

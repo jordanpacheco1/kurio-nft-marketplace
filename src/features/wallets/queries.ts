@@ -1,6 +1,6 @@
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query'
-import { connectWallet, disconnectWallet, fetchWallets, fetchWalletSession } from '@/features/wallets/api'
-import type { WalletSession, WalletSessionInput } from '@/shared/contracts'
+import { connectWallet, createWallet, disconnectWallet, fetchWallets, fetchWalletSession, updateWallet } from '@/features/wallets/api'
+import type { Wallet, WalletInput, WalletSession, WalletSessionInput, WalletUpdate } from '@/shared/contracts'
 import { announce } from '@/shared/ui/announcer'
 
 export const walletKeys = {
@@ -42,6 +42,24 @@ export function useDisconnectWallet(userId: string) {
     onSuccess: () => {
       queryClient.setQueryData<WalletSession | null>(walletKeys.session(userId), null)
       announce('Carteira desconectada')
+    },
+  })
+}
+
+type SaveWallet = { walletId: string; input: WalletUpdate } | { walletId?: undefined; input: WalletInput }
+
+/** Cadastra (POST) ou edita (PATCH) a carteira de uma posição. A resposta substitui o item na lista. */
+export function useSaveWallet(userId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ walletId, input }: SaveWallet) =>
+      walletId ? updateWallet(walletId, input) : createWallet(input as WalletInput),
+    onSuccess: (wallet) => {
+      queryClient.setQueryData<Wallet[]>(walletKeys.list(userId), (current = []) =>
+        [...current.filter((item) => item.id !== wallet.id), wallet].sort(
+          (a, b) => Number(b.slot === 'primary') - Number(a.slot === 'primary'),
+        ),
+      )
     },
   })
 }
