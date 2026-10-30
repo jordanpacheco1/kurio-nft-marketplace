@@ -368,4 +368,60 @@ estático pré-carregado da Fase 3 ele deve cair.
   Ivory ×9 na edição Aberta).
 - `cn` (pacote `cn`) junta `text-caption` com cores `text-*` e remove o tamanho: concatenar a classe
   quando misturar tamanho e cor customizados.
-- Próxima: Fase 6.
+- Fase 6 concluída (abaixo).
+
+## Fase 6 — Perfil e carteiras
+
+**Status:** concluída em 31/10. Screenshots lado a lado com o Figma: `docs/screenshots/fase6-*.png`.
+
+### Feito
+
+- **Layout `/perfil/*`** (`features/profile/components/profile-layout.tsx`): menu lateral "Meu perfil" do Figma
+  (Dados do perfil, Carteiras, Lista de interesse e Sair funcionam; Atividade, Ofertas, Arquivos baixados e
+  Suporte ficam desabilitados com "Em breve"). No mobile o menu vira pílulas roláveis com Sair.
+- **Perfil** (`/perfil`):
+  - nome de exibição, usuário, e-mail, ENS (sufixo `.eth` fixo) e apelido da carteira; o `PATCH` leva **só o
+    que mudou**; validação com o `profileUpdateSchema` e erros da API por campo (ex.: usuário/e-mail de outra
+    conta), foco no primeiro inválido;
+  - o perfil salvo atualiza o cache do perfil e o usuário da sessão (`setQueriesData(['session'])`), então
+    nome e avatar do header mudam na hora;
+  - **avatar:** "Alterar" abre o seletor, corta o centro e redimensiona para 256 px num canvas (WebP, ou JPEG
+    como fallback) e envia na hora (`PUT /me/avatar`); "Remover" (`DELETE /me/avatar`). Arquivo que não é
+    imagem e erro da API aparecem no grupo do avatar (`aria-describedby`);
+  - **senha:** atual, nova e confirmar, com mostrar/ocultar. Preencher um campo exige os outros; "Senha atual
+    incorreta" vem da API. Um único "Salvar" (como no Figma) salva os dados e depois a senha; se a senha falhar,
+    a mensagem diz que o perfil já foi salvo.
+- **Carteiras** (`/perfil/carteiras`): principal e secundária, cada uma com o próprio formulário (apelido, rede,
+  endereço `0x…`/`.eth` e tipo). Sem carteira: "Adicionar carteira" (`POST`); com carteira: "Salvar carteira"
+  (`PATCH`). Secundária: "Adicionar" abre o formulário e **"Igual à carteira principal"** o preenche com rede,
+  endereço e tipo da principal (só falta o apelido). A resposta substitui o item no cache `['me', id, 'wallets']`,
+  que o checkout usa.
+- **Mock:** regra fixa nova — endereço já ligado a **outra conta** dá 409 `CONFLICT` com `fields.address`
+  (dá para repetir o endereço entre as suas carteiras). Documentado em `docs/API.md`.
+- **Lista de interesse** (`/perfil/favoritos`): grid com os favoritos (o coração desfavorita de forma otimista e o
+  card sai da lista), estados de carregamento, vazio ("Explorar o mercado") e erro.
+- `FormField` (label com asterisco, dica e erro) saiu do formulário do checkout para `shared/ui/form-field.tsx`.
+  `TextField` ganhou `labelClassName`. A tela provisória `ComingSoon` foi removida (não há mais placeholders).
+- **E2E** (`profile.spec.ts`, cenário 8, desktop e mobile): perfil (validação, conflito da API, PATCH só com o que
+  mudou, header atualizado, refresh), avatar (arquivo inválido, 256 px, refresh, remover), senha (campos
+  obrigatórios, confirmação, senha atual errada, troca valendo no login), carteiras (curadora sem carteiras:
+  validação, endereço de outra conta, cadastro, "Igual à principal", edição e refresh) e lista de interesse.
+  `auth.spec.ts` ajustado à tela nova. **Resultado: 99 passando, 23 pulados (os mesmos da Fase 5).**
+  Sem overflow em 390, 768 e 1024 px nas três telas.
+
+### Decisões e desvios do Figma
+
+- **Carteiras:** o formulário do Figma repete campos do pagamento (nome de exibição, nome do perfil, e-mail,
+  ENS, código de indicação, ENS/secundária) — defeito listado. Ficaram só os campos da carteira: apelido, rede,
+  endereço e tipo. O "Adicionar" do topo da principal não aparece: a principal sempre mostra o formulário.
+- **Perfil:** ENS e apelido da carteira são opcionais (o Figma marca obrigatórios, mas conta nova não tem ENS e
+  o contrato aceita `null`). O `.eth` fica como sufixo fixo à direita (mesmo padrão do checkout), não como select.
+- **Avatar** salva na hora, sem depender do "Salvar"; o texto de ajuda da senha foi acrescentado.
+- **Header:** mostra o avatar logado (o Figma mostra "Entrar" — defeito listado). Atividade e afins: "Em breve".
+- Selects nativos, como no checkout.
+
+### Pendências
+
+- Fase 7: cenário 11 (teclado, foco em dialogs e validação de formulários) e regressão visual.
+- Fase 8: Lighthouse, README/ARCHITECTURE (registrar os desvios das Fases 3–6) e entrega.
+- Próxima: Fase 7.
