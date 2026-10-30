@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 test('a home carrega o catálogo vindo do mock', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByTestId('nft-card')).toHaveCount(4)
+  await expect(page.getByTestId('nft-card')).toHaveCount(9)
   await expect(page.getByRole('heading', { name: 'Emerald Ape #042' })).toBeVisible()
 })
 
