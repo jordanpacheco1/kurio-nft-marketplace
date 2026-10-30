@@ -2,6 +2,8 @@ import { Link, useLocation } from '@tanstack/react-router'
 import { cn } from 'cn'
 import { useState } from 'react'
 import { Buy, Login, Search } from 'react-iconly'
+import { AccountMenu } from '@/features/auth/components/account-menu'
+import { useCurrentUser } from '@/features/auth/queries'
 import { SearchField } from '@/features/catalog/components/search-field'
 import { useCartCount } from '@/features/cart/queries'
 import { Icon } from '@/shared/ui/icon'
@@ -12,11 +14,12 @@ const navActive = 'font-bold text-copper-text after:bg-copper'
 
 // Header do desktop. No mobile cada tela tem o próprio topo e a navegação fica na tab bar.
 export function SiteHeader() {
-  const { pathname } = useLocation()
+  const { pathname, href } = useLocation()
   const count = useCartCount()
+  const { user, isPending } = useCurrentUser()
   const [searchOpen, setSearchOpen] = useState(false)
   const onHome = pathname === '/'
-  const onMarket = pathname.startsWith('/nft/')
+  const onMarket = pathname.startsWith('/nft/') || pathname === '/carrinho'
 
   return (
     <header className="hidden border-b border-border lg:block">
@@ -71,14 +74,20 @@ export function SiteHeader() {
               </span>
             )}
           </Link>
-          <Link
-            to="/login"
-            search={{ redirect: pathname === '/login' ? undefined : pathname }}
-            className="flex items-center gap-1 rounded-sm bg-copper px-2 py-1 text-sm text-ink hover:bg-copper-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-copper"
-          >
-            <Icon as={Login} size={18} />
-            Entrar
-          </Link>
+          {user ? (
+            <AccountMenu user={user} />
+          ) : isPending ? (
+            <span aria-hidden="true" className="skeleton size-8 rounded-full" />
+          ) : (
+            <Link
+              to="/login"
+              search={{ redirect: pathname === '/login' || pathname === '/cadastro' ? undefined : href }}
+              className="flex items-center gap-1 rounded-sm bg-copper px-2 py-1 text-sm text-ink hover:bg-copper-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-copper"
+            >
+              <Icon as={Login} size={18} />
+              Entrar
+            </Link>
+          )}
         </div>
       </div>
     </header>

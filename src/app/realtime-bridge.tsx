@@ -1,15 +1,19 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
+import { useToken } from '@/features/auth/queries'
 import { bindRealtimeToCache } from '@/shared/realtime/sync'
 import { openSocket } from '@/shared/realtime/socket'
 
+// Um socket por sessão: login, logout ou troca de usuário fecham o anterior (e os listeners)
+// e abrem outro com o token novo, para eventos privados nunca chegarem ao usuário errado.
 export function RealtimeBridge() {
   const queryClient = useQueryClient()
+  const token = useToken()
 
   useEffect(() => {
     let cleanup: (() => void) | undefined
     let cancelled = false
-    void openSocket(null).then((socket) => {
+    void openSocket(token).then((socket) => {
       if (cancelled) socket.disconnect()
       else cleanup = bindRealtimeToCache(socket, queryClient)
     })
@@ -17,7 +21,7 @@ export function RealtimeBridge() {
       cancelled = true
       cleanup?.()
     }
-  }, [queryClient])
+  }, [queryClient, token])
 
   return null
 }

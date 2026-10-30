@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 
-// Tela provisória das rotas que a Fase 4 implementa (login e carrinho). Sai junto com elas.
+// Tela provisória das rotas que as Fases 5 e 6 implementam (pagamento e perfil). Sai junto com elas.
 export function ComingSoon({ title }: { title: string }) {
   return (
     <section className="page-container flex flex-col items-center gap-4 py-24 text-center">

@@ -20,9 +20,28 @@ function write(key: string, value: string | null) {
 }
 
 let memoryCartId: string | null = null
+const tokenListeners = new Set<() => void>()
 
 export const getToken = () => read(TOKEN_KEY)
-export const setToken = (token: string | null) => write(TOKEN_KEY, token)
+
+/** Grava (ou apaga) o token e avisa quem depende da sessão (hooks e socket). */
+export function setToken(token: string | null) {
+  write(TOKEN_KEY, token)
+  tokenListeners.forEach((notify) => notify())
+}
+
+export function subscribeToken(listener: () => void) {
+  tokenListeners.add(listener)
+  // Outra aba entrou ou saiu.
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === TOKEN_KEY) listener()
+  }
+  window.addEventListener('storage', onStorage)
+  return () => {
+    tokenListeners.delete(listener)
+    window.removeEventListener('storage', onStorage)
+  }
+}
 
 /** Id do carrinho de visitante (header `X-Cart-Id`). Criado na primeira leitura. */
 export function getGuestCartId() {

@@ -16,6 +16,8 @@ export function TabBar({ cartCount }: { cartCount: number }) {
   const { pathname } = useLocation()
   const onHome = pathname === '/'
   const onCart = pathname === '/carrinho'
+  const onFavorites = pathname === '/perfil/favoritos'
+  const onProfile = pathname.startsWith('/perfil') && !onFavorites
 
   return (
     <nav
@@ -29,9 +31,9 @@ export function TabBar({ cartCount }: { cartCount: number }) {
           </Link>
         </li>
         <li>
-          {/* A lista de favoritos é protegida: o visitante passa pelo login (Fase 4) e a tela chega na Fase 6. */}
-          <Link to="/login" search={{ redirect: '/perfil/favoritos' }} aria-label="Favoritos" className={item}>
-            <Glyph as={Heart} active={false} />
+          {/* Rotas protegidas: o guard leva o visitante ao login e de volta. */}
+          <Link to="/perfil/favoritos" aria-label="Favoritos" aria-current={onFavorites ? 'page' : undefined} className={cn(item, onFavorites && 'text-copper-text')}>
+            <Glyph as={Heart} active={onFavorites} />
           </Link>
         </li>
         <li className="-mt-10">
@@ -61,8 +63,8 @@ export function TabBar({ cartCount }: { cartCount: number }) {
           </Link>
         </li>
         <li>
-          <Link to="/login" search={{ redirect: '/perfil' }} aria-label="Perfil" className={item}>
-            <Glyph as={User} active={false} />
+          <Link to="/perfil" aria-label="Perfil" aria-current={onProfile ? 'page' : undefined} className={cn(item, onProfile && 'text-copper-text')}>
+            <Glyph as={User} active={onProfile} />
           </Link>
         </li>
       </ul>
