@@ -14,7 +14,7 @@ Registro por fase. Uma sessão nova começa lendo este arquivo e o `docs/PLANO.m
 
 ## Fase 1 — Fundação e risco técnico
 
-**Status:** código pronto e testado localmente; falta o deploy na Vercel (ver Pendências).
+**Status:** concluída em 30/10. Deploy: https://kurio-nft-marketplace-sooty-mu.vercel.app
 
 ### Feito
 
@@ -60,5 +60,7 @@ estático pré-carregado da Fase 3 ele deve cair.
 
 ### Pendências
 
-- [ ] Jordan importar o repositório na Vercel e mandar a URL.
-- [ ] Rodar o smoke contra a URL pública (`BASE_URL=... npm run test:e2e`) e conferir refresh em rota interna.
+- [x] Repositório importado na Vercel (deploy automático a cada push no `main`).
+- [x] Smoke contra a URL pública: 6/6 (`BASE_URL=https://kurio-nft-marketplace-sooty-mu.vercel.app npm run test:e2e`).
+- [x] Refresh em rota interna devolve o `index.html` (200); `/api/nfts` fora do mock dá 404, como previsto.
+- Próxima: Fase 2.
