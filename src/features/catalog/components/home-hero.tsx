@@ -40,7 +40,7 @@ export function HomeHero() {
             </span>
           </div>
         </div>
-        <div className="w-[450px] shrink-0 overflow-hidden rounded-xl">
+        <div className="w-[min(450px,40%)] shrink-0 overflow-hidden rounded-xl">
           <NftImage image="ape-emerald" sizes="450px" priority alt="Emerald Ape #042, macaco de óculos e jaqueta verde" />
         </div>
       </section>

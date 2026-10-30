@@ -30,7 +30,9 @@ export function NftDetailView({ nft, requestedEdition }: Props) {
   const addToCart = useAddToCart()
   const [quantity, setQuantity] = useState(1)
 
-  const { edition, missing } = pickEdition(nft, requestedEdition)
+  // Sem `?edition=`, a escolha inicial fica fixa: se ela esgotar em tempo real, o aviso aparece em vez de trocar sozinha.
+  const [initialEdition] = useState(() => pickEdition(nft, requestedEdition).edition.id)
+  const { edition, missing } = pickEdition(nft, requestedEdition ?? initialEdition)
   const allSoldOut = nft.editions.every((item) => item.available === 0)
   const soldOut = edition.available === 0
   const max = Math.max(1, Math.min(edition.available, MAX_QUANTITY_PER_ITEM))
@@ -66,7 +68,7 @@ export function NftDetailView({ nft, requestedEdition }: Props) {
     <div className="flex flex-col gap-10 lg:page-container lg:gap-16 lg:pt-6">
       <div>
         <Breadcrumb name={nft.name} />
-        <div className="lg:mt-3 lg:grid lg:grid-cols-[535px_1fr] lg:items-start lg:gap-8">
+        <div className="lg:mt-3 lg:grid lg:grid-cols-[minmax(0,535px)_minmax(0,1fr)] lg:items-start lg:gap-8">
           <MobileMedia nft={nft} favorited={favorited} onFavorite={() => favorites.toggle(nft)} />
           <div className="hidden lg:block">
             <Gallery nft={nft} />
@@ -102,7 +104,7 @@ export function NftDetailView({ nft, requestedEdition }: Props) {
             )}
 
             {/* Barra de compra: fixa no rodapé no mobile, em linha no desktop. */}
-            <div className="fixed inset-x-0 bottom-0 z-30 flex flex-col gap-4 rounded-t-4xl bg-surface px-6 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-sheet lg:static lg:flex-row lg:items-center lg:justify-between lg:rounded-none lg:bg-transparent lg:p-0 lg:py-2 lg:shadow-none">
+            <div className="fixed inset-x-0 bottom-0 z-30 flex flex-col gap-4 rounded-t-4xl bg-surface px-6 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-sheet lg:static lg:flex-row lg:flex-wrap lg:items-center lg:justify-between lg:rounded-none lg:bg-transparent lg:p-0 lg:py-2 lg:shadow-none">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <span className="text-base font-bold text-fg lg:sr-only">Qtd.</span>

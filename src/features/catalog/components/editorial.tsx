@@ -90,7 +90,7 @@ export function MintJournal() {
           Histórias, guias e insights para colecionadores sobre o universo da propriedade digital.
         </p>
       </header>
-      <ul className="grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 lg:grid-cols-[repeat(4,268px)] lg:gap-[22px]">
+      <ul className="grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 lg:grid-cols-[repeat(4,minmax(0,268px))] lg:gap-[22px]">
         {posts.map((post) => (
           <li key={post.title} className="flex flex-col overflow-hidden rounded-sm bg-surface">
             <NftImage image={post.image} sizes="(min-width: 1024px) 268px, 50vw" className="aspect-[268/195]" />

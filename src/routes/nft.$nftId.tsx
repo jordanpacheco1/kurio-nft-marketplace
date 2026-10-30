@@ -49,7 +49,7 @@ function NftNotFound() {
 function DetailSkeleton() {
   return (
     <div aria-busy="true" aria-label="Carregando NFT" className="lg:page-container lg:pt-6">
-      <div className="lg:mt-9 lg:grid lg:grid-cols-[535px_1fr] lg:gap-8">
+      <div className="lg:mt-9 lg:grid lg:grid-cols-[minmax(0,535px)_minmax(0,1fr)] lg:gap-8">
         <div className="px-7 pt-[72px] lg:flex lg:gap-6 lg:p-0">
           <div className="hidden w-[100px] flex-col gap-4 lg:flex">
             {Array.from({ length: 4 }, (_, i) => (

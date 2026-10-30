@@ -16,7 +16,7 @@ type Props = {
 
 /**
  * Busca do catálogo (header no desktop, topo da home no mobile). Escreve `q` na URL com debounce
- * e `replace`, para não encher o histórico; fora da home, leva para a home com a busca.
+ * de 300 ms; fora da home, leva para a home com a busca.
  */
 export function SearchField({ className, inputClassName, placeholder = 'Explorar coleções', autoFocus, onEscape }: Props) {
   const navigate = useNavigate()
@@ -38,7 +38,8 @@ export function SearchField({ className, inputClassName, placeholder = 'Explorar
       void navigate({
         to: '/',
         search: (prev) => ({ ...(pathname === '/' ? prev : {}), q: term, page: 1 }),
-        replace: pathname === '/',
+        // Começar uma busca cria entrada no histórico; refinar o termo só a substitui.
+        replace: pathname === '/' && q !== '',
         resetScroll: false,
       })
     }, DEBOUNCE_MS)
