@@ -48,7 +48,8 @@ function NftNotFound() {
 
 function DetailSkeleton() {
   return (
-    <div aria-busy="true" aria-label="Carregando NFT" className="lg:page-container lg:pt-6">
+    // A altura mínima reserva as abas e "Mais desta coleção", que só existem com os dados (evita CLS).
+    <div aria-busy="true" aria-label="Carregando NFT" className="min-h-[1540px] lg:page-container lg:min-h-[1220px] lg:pt-6">
       <div className="lg:mt-9 lg:grid lg:grid-cols-[minmax(0,535px)_minmax(0,1fr)] lg:gap-8">
         <div className="px-7 pt-[72px] lg:flex lg:gap-6 lg:p-0">
           <div className="hidden w-[100px] flex-col gap-4 lg:flex">
