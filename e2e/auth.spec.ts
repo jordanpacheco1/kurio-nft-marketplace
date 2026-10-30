@@ -38,10 +38,11 @@ test('cadastro valida os campos, trata conflito e entra na conta', async ({ page
   await form.getByLabel('E-mail').fill('nova@kurio.test')
   await submitRegister(page)
   await expect(page).toHaveURL('/perfil')
-  await expect(page.getByText('nova.colecionadora')).toBeVisible()
+  const savedUsername = page.getByRole('textbox', { name: 'Nome de usuário' })
+  await expect(savedUsername).toHaveValue('nova.colecionadora')
   await page.reload()
   await expect(page).toHaveURL('/perfil')
-  await expect(page.getByText('nova.colecionadora')).toBeVisible()
+  await expect(savedUsername).toHaveValue('nova.colecionadora')
 })
 
 test('login com senha errada e retorno ao fluxo anterior', async ({ page, isMobile }) => {
@@ -74,7 +75,7 @@ test('rota protegida leva ao login e volta depois de entrar', async ({ page }) =
   await expect(page).toHaveURL('/login?redirect=%2Fperfil')
   await signIn(page)
   await expect(page).toHaveURL('/perfil')
-  await expect(page.getByRole('heading', { name: 'Perfil', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Perfil do colecionador' })).toBeVisible()
 })
 
 test('sessão que expira durante a navegação volta para a mesma tela', async ({ page }) => {
@@ -116,7 +117,7 @@ test('logout e troca de usuário limpam favoritos, carrinho e socket da sessão 
   // Logout: menu da conta no desktop; no mobile, pela tela de perfil
   if (isMobile) {
     await page.goto('/perfil?devtools=off')
-    await page.getByRole('button', { name: 'Sair da conta' }).click()
+    await page.getByRole('button', { name: 'Sair', exact: true }).click()
   } else {
     await page.getByRole('button', { name: 'Conta de Rafa Colecionador' }).click()
     await page.getByRole('menuitem', { name: 'Sair' }).click()
