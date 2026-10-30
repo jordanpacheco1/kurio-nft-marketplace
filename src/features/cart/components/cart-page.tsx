@@ -1,4 +1,5 @@
 import { Link, useCanGoBack, useRouter } from '@tanstack/react-router'
+import { useEffect, useRef } from 'react'
 import { ChevronLeft } from 'react-iconly'
 import { Button } from '@/components/ui/button'
 import { CartCards, CartTable } from '@/features/cart/components/cart-lines'
@@ -81,9 +82,30 @@ function Skeleton() {
   )
 }
 
+/**
+ * Remover a linha focada tira o elemento do DOM e o foco cai no <body>. Quando o número de linhas
+ * diminui e o foco se perdeu, ele vai para o próximo botão "Remover" ou, sem linhas, para o estado vazio.
+ */
+function useKeepFocusOnRemove(count: number | undefined) {
+  const linesRef = useRef<HTMLDivElement>(null)
+  const emptyRef = useRef<HTMLHeadingElement>(null)
+  const previous = useRef(count)
+
+  useEffect(() => {
+    const removed = count !== undefined && previous.current !== undefined && count < previous.current
+    previous.current = count
+    if (!removed || document.activeElement !== document.body) return
+    const next = linesRef.current?.querySelector<HTMLElement>('button[aria-label^="Remover"]:not(:disabled)')
+    ;(next ?? emptyRef.current)?.focus()
+  }, [count])
+
+  return { linesRef, emptyRef }
+}
+
 export function CartPage() {
   const cart = useCart()
   const isDesktop = useMediaQuery(DESKTOP_QUERY)
+  const { linesRef, emptyRef } = useKeepFocusOnRemove(cart.data?.items.length)
 
   let content
   if (cart.isPending) content = <Skeleton />
@@ -99,7 +121,9 @@ export function CartPage() {
   } else if (!cart.data.items.length) {
     content = (
       <div className="flex flex-col items-center gap-4 py-16 text-center">
-        <h2 className="text-tab font-bold text-fg">Seu carrinho está vazio</h2>
+        <h2 ref={emptyRef} tabIndex={-1} className="text-tab font-bold text-fg focus:outline-none">
+          Seu carrinho está vazio
+        </h2>
         <p className="text-caption text-fg-secondary">Explore o catálogo e adicione os NFTs que quer colecionar.</p>
         <Button asChild>
           <Link to="/" hash="catalogo">
@@ -113,7 +137,7 @@ export function CartPage() {
     content = (
       <>
         <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[1fr_332px] lg:items-start lg:gap-[86px]">
-          <div className="flex flex-col gap-4">
+          <div ref={linesRef} className="flex flex-col gap-4">
             <Notices />
             {isDesktop ? <CartTable items={data.items} /> : <CartCards items={data.items} />}
           </div>
