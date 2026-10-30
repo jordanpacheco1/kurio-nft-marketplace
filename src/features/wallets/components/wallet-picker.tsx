@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { cn } from 'cn'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useConnectWallet, useDisconnectWallet } from '@/features/wallets/queries'
 import { isSessionError } from '@/features/auth/session-events'

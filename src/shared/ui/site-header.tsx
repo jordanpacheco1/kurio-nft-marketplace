@@ -1,5 +1,5 @@
 import { Link, useLocation } from '@tanstack/react-router'
-import { cn } from 'cn'
+import { cn } from '@/lib/utils'
 import { useState } from 'react'
 import { Buy, Login, Search } from 'react-iconly'
 import { AccountMenu } from '@/features/auth/components/account-menu'

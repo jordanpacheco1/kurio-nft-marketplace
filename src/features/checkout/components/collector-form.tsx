@@ -1,4 +1,4 @@
-import { cn } from 'cn'
+import { cn } from '@/lib/utils'
 import type { RefObject } from 'react'
 import type { CollectorDraft } from '@/features/checkout/storage'
 import { NETWORK_LABELS, WALLET_PROVIDER_LABELS, networkSchema, type Network, type Wallet } from '@/shared/contracts'

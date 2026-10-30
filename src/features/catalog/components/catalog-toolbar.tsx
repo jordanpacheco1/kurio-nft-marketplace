@@ -1,4 +1,4 @@
-import { cn } from 'cn'
+import { cn } from '@/lib/utils'
 import { ChevronDown } from 'react-iconly'
 import { SORT_LABELS, TAB_LABELS } from '@/features/catalog/search'
 import { useHomeSearch } from '@/features/catalog/use-home-search'

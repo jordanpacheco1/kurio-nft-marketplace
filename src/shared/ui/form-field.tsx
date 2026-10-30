@@ -1,4 +1,4 @@
-import { cn } from 'cn'
+import { cn } from '@/lib/utils'
 import { useId, useState, type InputHTMLAttributes, type ReactNode } from 'react'
 import { Hide, Show } from 'react-iconly'
 import { Icon } from '@/shared/ui/icon'

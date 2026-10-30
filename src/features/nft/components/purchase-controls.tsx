@@ -1,4 +1,4 @@
-import { cn } from 'cn'
+import { cn } from '@/lib/utils'
 import { MinusIcon, PlusIcon } from 'lucide-react'
 import type { Edition } from '@/shared/contracts'
 

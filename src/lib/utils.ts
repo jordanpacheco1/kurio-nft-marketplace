@@ -1,6 +1,10 @@
-import { clsx, type ClassValue } from 'clsx'
-import { twMerge } from 'tailwind-merge'
+import { createCn } from 'cn/config'
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
-}
+// Sem os tamanhos do tema, `text-caption` etc. contam como cor e o `text-*` de cor ao lado é descartado.
+export const cn = createCn({
+  extend: {
+    classGroups: {
+      'font-size': [{ text: ['micro', 'tiny', 'caption', 'body', 'tab', 'title', 'heading', 'logo', 'display'] }],
+    },
+  },
+})

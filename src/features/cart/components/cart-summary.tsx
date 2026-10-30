@@ -1,5 +1,5 @@
 import { Link, useNavigate } from '@tanstack/react-router'
-import { cn } from 'cn'
+import { cn } from '@/lib/utils'
 import { useId, useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { useApplyCoupon, useRemoveCoupon } from '@/features/cart/queries'

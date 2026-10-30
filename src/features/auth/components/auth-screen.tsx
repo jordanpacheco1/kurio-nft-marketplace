@@ -1,5 +1,5 @@
 import { Link, useNavigate } from '@tanstack/react-router'
-import { cn } from 'cn'
+import { cn } from '@/lib/utils'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { LoginForm, RegisterForm } from '@/features/auth/components/auth-forms'
 import { safeRedirect } from '@/features/auth/queries'

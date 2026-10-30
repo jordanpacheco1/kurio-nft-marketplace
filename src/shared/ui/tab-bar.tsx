@@ -1,5 +1,5 @@
 import { Link, useLocation } from '@tanstack/react-router'
-import { cn } from 'cn'
+import { cn } from '@/lib/utils'
 import type { ComponentType } from 'react'
 import { Buy, Heart, Home, Scan, User, type IconProps } from 'react-iconly'
 import { Icon } from '@/shared/ui/icon'

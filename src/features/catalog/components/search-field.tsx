@@ -1,5 +1,5 @@
 import { useLocation, useNavigate, useSearch } from '@tanstack/react-router'
-import { cn } from 'cn'
+import { cn } from '@/lib/utils'
 import { useEffect, useState, type KeyboardEvent } from 'react'
 import { Search } from 'react-iconly'
 import { Icon } from '@/shared/ui/icon'

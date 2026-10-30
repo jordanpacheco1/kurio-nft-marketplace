@@ -1,5 +1,5 @@
 import { Link, useCanGoBack, useNavigate, useRouter } from '@tanstack/react-router'
-import { cn } from 'cn'
+import { cn } from '@/lib/utils'
 import { useState } from 'react'
 import { Buy, ChevronLeft, Heart, Star } from 'react-iconly'
 import { toast } from 'sonner'

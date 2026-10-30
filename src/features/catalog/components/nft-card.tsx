@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { cn } from 'cn'
+import { cn } from '@/lib/utils'
 import { Buy, Heart, Search } from 'react-iconly'
 import { useQuickAdd } from '@/features/catalog/use-quick-add'
 import { useFavorites } from '@/features/favorites/queries'

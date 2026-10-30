@@ -1,6 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query'
 import { createRootRouteWithContext, Outlet, useLocation } from '@tanstack/react-router'
-import { cn } from 'cn'
+import { cn } from '@/lib/utils'
 import { SessionWatcher } from '@/features/auth/components/session-watcher'
 import { useCartCount } from '@/features/cart/queries'
 import { PendingOrderWatcher } from '@/features/orders/components/pending-order-watcher'

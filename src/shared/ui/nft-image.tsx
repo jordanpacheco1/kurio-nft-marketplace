@@ -1,4 +1,4 @@
-import { cn } from 'cn'
+import { cn } from '@/lib/utils'
 import type { NftImage as NftImageName } from '@/shared/contracts'
 
 const WIDTHS = [320, 640, 1024] as const

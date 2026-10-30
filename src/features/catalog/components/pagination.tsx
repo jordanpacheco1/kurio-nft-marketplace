@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { cn } from 'cn'
+import { cn } from '@/lib/utils'
 import { ChevronLeft, ChevronRight } from 'react-iconly'
 import { Icon } from '@/shared/ui/icon'
 

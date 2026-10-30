@@ -1,6 +1,6 @@
 import type { UseQueryResult } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { cn } from 'cn'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { ApiError } from '@/shared/api/errors'
 import { NETWORK_LABELS, type Quote } from '@/shared/contracts'

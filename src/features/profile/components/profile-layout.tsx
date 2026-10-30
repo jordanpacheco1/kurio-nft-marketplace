@@ -1,5 +1,5 @@
 import { Link, Outlet } from '@tanstack/react-router'
-import { cn } from 'cn'
+import { cn } from '@/lib/utils'
 import type { ComponentType } from 'react'
 import { Activity, Buy, Danger, Download, Heart, Location, Logout, User, type IconProps } from 'react-iconly'
 import { useLogout } from '@/features/auth/queries'

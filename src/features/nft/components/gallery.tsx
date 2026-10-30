@@ -1,4 +1,4 @@
-import { cn } from 'cn'
+import { cn } from '@/lib/utils'
 import { useState } from 'react'
 import { Search } from 'react-iconly'
 import type { NftDetail } from '@/shared/contracts'
