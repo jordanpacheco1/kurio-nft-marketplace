@@ -18,8 +18,11 @@ function userFromToken(token: string | null) {
 
 export const realtimeHandler = realtime.addEventListener('connection', (connection) => {
   // Queda simulada: recusa conexões novas; o cliente recebe `transport close` e tenta de novo.
+  // Fechar antes do handshake do Engine.IO não chega ao cliente (a tentativa fica pendurada até o
+  // timeout de 20 s do Manager). Então o binding abre a conexão e ela é fechada logo em seguida.
   if (Date.now() < refuseUntil) {
-    connection.client.close()
+    toSocketIo(connection)
+    setTimeout(() => connection.client.close(), 0)
     return
   }
 
