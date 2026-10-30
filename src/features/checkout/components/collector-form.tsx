@@ -1,52 +1,8 @@
 import { cn } from 'cn'
-import { useId, type ReactNode, type RefObject } from 'react'
+import type { RefObject } from 'react'
 import type { CollectorDraft } from '@/features/checkout/storage'
 import { NETWORK_LABELS, WALLET_PROVIDER_LABELS, networkSchema, type Network, type Wallet } from '@/shared/contracts'
-import { inputClass } from '@/shared/ui/form-field'
-
-type FieldProps = {
-  label: string
-  required?: boolean
-  error?: string
-  hint?: string
-  /** Label só para leitor de tela (o Figma mostra só o placeholder). */
-  hideLabel?: boolean
-  className?: string
-  children: (props: { id: string; 'aria-invalid'?: true; 'aria-describedby'?: string; 'aria-required'?: true }) => ReactNode
-}
-
-function Field({ label, required, error, hint, hideLabel, className, children }: FieldProps) {
-  const id = useId()
-  const described = [error && `${id}-error`, hint && `${id}-hint`].filter(Boolean).join(' ')
-  return (
-    <div className={cn('flex flex-col gap-1.5', className)}>
-      <label htmlFor={id} className={hideLabel ? 'sr-only' : 'text-body text-fg'}>
-        {label}
-        {required && (
-          <span aria-hidden="true" className="ml-0.5 text-danger">
-            *
-          </span>
-        )}
-      </label>
-      {children({
-        id,
-        'aria-invalid': error ? true : undefined,
-        'aria-describedby': described || undefined,
-        'aria-required': required ? true : undefined,
-      })}
-      {hint && (
-        <p id={`${id}-hint`} className="text-tiny text-fg-muted">
-          {hint}
-        </p>
-      )}
-      {error && (
-        <p id={`${id}-error`} className="text-caption text-danger">
-          {error}
-        </p>
-      )}
-    </div>
-  )
-}
+import { FormField as Field, inputClass } from '@/shared/ui/form-field'
 
 const selectClass = `${inputClass} text-copper-text`
 

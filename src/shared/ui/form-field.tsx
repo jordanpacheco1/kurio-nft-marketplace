@@ -1,5 +1,5 @@
 import { cn } from 'cn'
-import { useId, useState, type InputHTMLAttributes } from 'react'
+import { useId, useState, type InputHTMLAttributes, type ReactNode } from 'react'
 import { Hide, Show } from 'react-iconly'
 import { Icon } from '@/shared/ui/icon'
 
@@ -13,10 +13,12 @@ type Props = Omit<InputHTMLAttributes<HTMLInputElement>, 'id'> & {
   /** O Figma mostra só o placeholder; o label fica para leitores de tela. */
   hideLabel?: boolean
   error?: string
+  /** Classe do label visível (padrão: o dos formulários de autenticação). */
+  labelClassName?: string
 }
 
 /** Campo com label, erro ligado por `aria-describedby` e `aria-invalid`. */
-export function TextField({ label, hideLabel = true, error, className, type = 'text', ...props }: Props) {
+export function TextField({ label, hideLabel = true, labelClassName = 'text-caption font-bold text-fg', error, className, type = 'text', ...props }: Props) {
   const id = useId()
   const errorId = `${id}-error`
   const [visible, setVisible] = useState(false)
@@ -24,7 +26,7 @@ export function TextField({ label, hideLabel = true, error, className, type = 't
 
   return (
     <div className={cn('flex flex-col gap-1.5', className)}>
-      <label htmlFor={id} className={hideLabel ? 'sr-only' : 'text-caption font-bold text-fg'}>
+      <label htmlFor={id} className={hideLabel ? 'sr-only' : labelClassName}>
         {label}
       </label>
       <div className="relative">
@@ -50,6 +52,51 @@ export function TextField({ label, hideLabel = true, error, className, type = 't
       </div>
       {error && (
         <p id={errorId} className="text-caption text-danger">
+          {error}
+        </p>
+      )}
+    </div>
+  )
+}
+
+type FieldProps = {
+  label: string
+  required?: boolean
+  error?: string
+  hint?: string
+  /** Label só para leitor de tela (o Figma mostra só o placeholder). */
+  hideLabel?: boolean
+  className?: string
+  children: (props: { id: string; 'aria-invalid'?: true; 'aria-describedby'?: string; 'aria-required'?: true }) => ReactNode
+}
+
+/** Label visível com asterisco, dica e erro; o controle recebe os atributos de acessibilidade. */
+export function FormField({ label, required, error, hint, hideLabel, className, children }: FieldProps) {
+  const id = useId()
+  const described = [error && `${id}-error`, hint && `${id}-hint`].filter(Boolean).join(' ')
+  return (
+    <div className={cn('flex flex-col gap-1.5', className)}>
+      <label htmlFor={id} className={hideLabel ? 'sr-only' : 'text-body text-fg'}>
+        {label}
+        {required && (
+          <span aria-hidden="true" className="ml-0.5 text-danger">
+            *
+          </span>
+        )}
+      </label>
+      {children({
+        id,
+        'aria-invalid': error ? true : undefined,
+        'aria-describedby': described || undefined,
+        'aria-required': required ? true : undefined,
+      })}
+      {hint && (
+        <p id={`${id}-hint`} className="text-tiny text-fg-muted">
+          {hint}
+        </p>
+      )}
+      {error && (
+        <p id={`${id}-error`} className="text-caption text-danger">
           {error}
         </p>
       )}
