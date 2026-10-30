@@ -3,6 +3,7 @@ import { createRootRouteWithContext, Outlet, useLocation } from '@tanstack/react
 import { cn } from 'cn'
 import { SessionWatcher } from '@/features/auth/components/session-watcher'
 import { useCartCount } from '@/features/cart/queries'
+import { PendingOrderWatcher } from '@/features/orders/components/pending-order-watcher'
 import { NotFound } from '@/shared/ui/not-found'
 import { SiteFooter } from '@/shared/ui/site-footer'
 import { SiteHeader } from '@/shared/ui/site-header'
@@ -16,11 +17,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 function RootLayout() {
   const { pathname } = useLocation()
   const cartCount = useCartCount()
-  // No mobile, o detalhe e o carrinho trocam a tab bar pela própria barra (compra / resumo),
+  // No mobile, o detalhe, o carrinho e o pagamento trocam a tab bar pela própria barra (compra / resumo),
   // e login e cadastro são telas cheias, sem tab bar nem footer.
   const onDetail = pathname.startsWith('/nft/')
   const onAuth = pathname === '/login' || pathname === '/cadastro'
-  const onCart = pathname === '/carrinho'
+  const onCart = pathname === '/carrinho' || pathname === '/checkout'
   const showTabBar = !onDetail && !onAuth && !onCart
 
   return (
@@ -40,6 +41,7 @@ function RootLayout() {
       </div>
       {showTabBar && <TabBar cartCount={cartCount} />}
       <SessionWatcher />
+      <PendingOrderWatcher />
     </div>
   )
 }

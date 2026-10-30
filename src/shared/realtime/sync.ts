@@ -4,6 +4,7 @@ import { pushCartNotice, type CartNotice } from '@/features/cart/notices'
 import { nftKeys } from '@/features/catalog/queries'
 import {
   nftUpdatedEventSchema,
+  orderUpdatedEventSchema,
   type Cart,
   type Favorites,
   type Featured,
@@ -11,6 +12,8 @@ import {
   type NftList,
   type NftSummary,
   type NftUpdatedEvent,
+  type Order,
+  type Quote,
   type Related,
 } from '@/shared/contracts'
 import { createEventProcessor } from '@/shared/realtime/processor'
@@ -37,6 +40,17 @@ function patchDetail(nft: NftDetail, event: NftUpdatedEvent): NftDetail {
 const isCartQuery = (query: Query) =>
   query.queryKey[0] === 'cart' || (query.queryKey[0] === 'me' && query.queryKey[2] === 'cart')
 const isQuoteQuery = (query: Query) => query.queryKey[0] === 'me' && query.queryKey[2] === 'quote'
+const isPendingOrderQuery = (query: Query) =>
+  query.queryKey[0] === 'me' && query.queryKey[2] === 'orders' && (query.state.data as Order | undefined)?.status === 'pending'
+
+/** Cotação aberta com o NFT do evento (ou que falhou por estoque): o checkout cota de novo e mostra o que mudou. */
+function reconcileQuotes(queryClient: QueryClient, event: NftUpdatedEvent) {
+  void queryClient.invalidateQueries({
+    predicate: (query) =>
+      isQuoteQuery(query) &&
+      (query.state.status === 'error' || !!(query.state.data as Quote | undefined)?.lines.some((line) => line.nftId === event.resource.id)),
+  })
+}
 
 /**
  * Carrinho aberto com o NFT do evento: gera os avisos de preço e estoque e manda o REST recalcular
@@ -73,8 +87,11 @@ function reconcileCarts(queryClient: QueryClient, event: NftUpdatedEvent) {
   return notices
 }
 
-// Liga os eventos do socket ao cache do TanStack Query. Devolve a função de limpeza.
-export function bindRealtimeToCache(socket: Socket, queryClient: QueryClient) {
+/**
+ * Liga os eventos do socket ao cache do TanStack Query. Devolve a função de limpeza.
+ * `getUserId` dá o usuário atual: evento privado de outra conta (sessão anterior) é descartado.
+ */
+export function bindRealtimeToCache(socket: Socket, queryClient: QueryClient, getUserId: () => string | null) {
   const accept = createEventProcessor()
   let disconnectedOnce = false
 
@@ -110,6 +127,8 @@ export function bindRealtimeToCache(socket: Socket, queryClient: QueryClient) {
       return patchDetail(nft, event)
     })
 
+    reconcileQuotes(queryClient, event)
+
     // O aviso do carrinho é o mais específico; ele vence o anúncio genérico do catálogo.
     const cartNotices = reconcileCarts(queryClient, event)
     if (cartNotices.length) {
@@ -127,6 +146,26 @@ export function bindRealtimeToCache(socket: Socket, queryClient: QueryClient) {
     }
   }
 
+  // Pedido pendente → confirmado ou recusado. Os dois são terminais: nada depois disso muda o pedido.
+  const onOrderUpdated = (raw: unknown) => {
+    const parsed = orderUpdatedEventSchema.safeParse(raw)
+    if (!parsed.success) return
+    const event = parsed.data
+    const userId = getUserId()
+    if (!userId || event.userId !== userId || !accept(event)) return
+
+    let applied = false
+    queryClient.setQueryData<Order>(['me', userId, 'orders', event.resource.id], (order) => {
+      if (!order || order.status !== 'pending' || order.version >= event.version) return order
+      applied = true
+      const { status, receipt, declineReason } = event.data
+      return { ...order, status, receipt, declineReason, version: event.version, updatedAt: event.occurredAt }
+    })
+    if (!applied) return
+    if (event.data.status === 'confirmed') announce('Pagamento confirmado. Seus NFTs estão na sua carteira.')
+    else if (event.data.status === 'declined') announce(`Pagamento recusado. ${event.data.declineReason ?? ''}`.trim())
+  }
+
   const onDisconnect = () => {
     disconnectedOnce = true
   }
@@ -135,15 +174,19 @@ export function bindRealtimeToCache(socket: Socket, queryClient: QueryClient) {
   const onConnect = () => {
     if (!disconnectedOnce) return
     void queryClient.invalidateQueries({ queryKey: nftKeys.all })
-    void queryClient.invalidateQueries({ predicate: (query) => isCartQuery(query) || isQuoteQuery(query) })
+    void queryClient.invalidateQueries({
+      predicate: (query) => isCartQuery(query) || isQuoteQuery(query) || isPendingOrderQuery(query),
+    })
   }
 
   socket.on('nft.updated', onNftUpdated)
+  socket.on('order.updated', onOrderUpdated)
   socket.on('disconnect', onDisconnect)
   socket.on('connect', onConnect)
 
   return () => {
     socket.off('nft.updated', onNftUpdated)
+    socket.off('order.updated', onOrderUpdated)
     socket.off('disconnect', onDisconnect)
     socket.off('connect', onConnect)
     socket.disconnect()

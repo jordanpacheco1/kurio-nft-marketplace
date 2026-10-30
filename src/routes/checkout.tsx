@@ -1,9 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { requireAuth } from '@/features/auth/queries'
-import { ComingSoon } from '@/shared/ui/coming-soon'
+import { CheckoutPage } from '@/features/checkout/components/checkout-page'
 
-// Provisória: o pagamento entra na Fase 5. A proteção da rota já vale.
+// Protegida: a cotação e o pedido são do usuário logado. Se a sessão vencer no meio, o rascunho fica no
+// sessionStorage e volta depois do login (`redirect=/checkout`).
 export const Route = createFileRoute('/checkout')({
   beforeLoad: requireAuth,
-  component: () => <ComingSoon title="Pagamento" />,
+  component: CheckoutPage,
 })

@@ -19,7 +19,7 @@ export function SiteHeader() {
   const { user, isPending } = useCurrentUser()
   const [searchOpen, setSearchOpen] = useState(false)
   const onHome = pathname === '/'
-  const onMarket = pathname.startsWith('/nft/') || pathname === '/carrinho'
+  const onMarket = pathname.startsWith('/nft/') || pathname === '/carrinho' || pathname === '/checkout'
 
   return (
     <header className="hidden border-b border-border lg:block">
