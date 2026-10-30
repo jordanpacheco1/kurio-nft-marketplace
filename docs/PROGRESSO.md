@@ -372,7 +372,7 @@ estático pré-carregado da Fase 3 ele deve cair.
 
 ## Fase 6 — Perfil e carteiras
 
-**Status:** concluída em 31/10. Screenshots lado a lado com o Figma: `docs/screenshots/fase6-*.png`.
+**Status:** concluída em 30/10. Screenshots lado a lado com o Figma: `docs/screenshots/fase6-*.png`.
 
 ### Feito
 
