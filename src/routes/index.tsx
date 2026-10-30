@@ -27,7 +27,7 @@ function HomePage() {
           </Button>
         </div>
       ) : (
-        <ul aria-busy={isPending} className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <ul aria-busy={isPending} className="grid grid-cols-2 gap-4 lg:grid-cols-3">
           {isPending
             ? Array.from({ length: 4 }, (_, i) => (
                 <li key={i} aria-hidden="true" className="flex flex-col gap-2">

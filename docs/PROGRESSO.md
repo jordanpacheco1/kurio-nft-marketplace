@@ -5,7 +5,12 @@ Registro por fase. Uma sessão nova começa lendo este arquivo e o `docs/PLANO.m
 ## Contexto
 
 - 30/10: o recrutador já tinha dito na call que **pode usar IA** e que **o prazo é fixo** (sáb 31/10, ~12h).
-  Nenhum e-mail foi mandado. Segue o plano sem cortes antecipados.
+  Nenhum e-mail foi mandado.
+- 30/10: começamos um dia atrasado. O `PLANO.md` foi refeito para terminar sáb 11h30 (pausa de 0h30 a 6h)
+  e recebeu cortes: só dois layouts (mobile abaixo de 1024 px), carrosséis viram linha estática de cards,
+  conflito de cadastro e cupom inválido/expirado viram regras fixas do mock, e queda do socket e eventos
+  duplicados ficam só nos helpers `dropSocket` e `emitDuplicates` do `window.__kurio` (Fase 2).
+  O header, o footer e o grid da Fase 1 já usam o corte `lg:`.
 
 ## Fase 1 — Fundação e risco técnico
 

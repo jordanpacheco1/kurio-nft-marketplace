@@ -11,7 +11,7 @@ export function SiteHeader() {
         <Link to="/" className="text-xs font-bold tracking-widest text-fg">
           KURIO
         </Link>
-        <nav aria-label="Principal" className="hidden gap-8 text-sm md:flex">
+        <nav aria-label="Principal" className="hidden gap-8 text-sm lg:flex">
           <Link
             to="/"
             className="text-fg-secondary hover:text-fg"
