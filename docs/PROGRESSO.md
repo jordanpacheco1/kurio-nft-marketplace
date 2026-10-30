@@ -125,4 +125,88 @@ estático pré-carregado da Fase 3 ele deve cair.
 - O app ainda não usa auth, carrinho e o resto: isso vem nas Fases 3 a 6. O `RealtimeBridge` abre o socket
   sem token; na Fase 4 ele passa a reabrir com o token do usuário logado.
 - O processador e o sync ainda só atualizam a lista; detalhe e carrinho entram nas Fases 3 e 4.
-- Próxima: Fase 3.
+- Fase 3 concluída (abaixo).
+
+## Fase 3 — Catálogo e detalhe
+
+**Status:** concluída em 30/10. Screenshots lado a lado com o Figma: `docs/screenshots/fase3-*.png`.
+
+### Feito
+
+- **Layout:**
+  - header desktop com busca (abre ao clicar na lupa), badge do carrinho e "Entrar";
+  - footer completo do Figma;
+  - tab bar mobile (some no detalhe, que tem a barra de compra);
+  - link "Pular para o conteúdo";
+  - utilitário `page-container`: 1200 px de conteúdo, com respiro abaixo disso.
+- **Início:**
+  - hero estático, com a imagem pré-carregada no `index.html`;
+  - filtros (coleções, faixa de preço com slider duplo + Aplicar, rede), abas, ordenação, paginação e busca
+    (debounce de 300 ms), tudo na URL com Zod em `validateSearch` + `stripSearchParams`;
+  - skeletons, indicador "Atualizando resultados…" (`keepPreviousData`), estado vazio com "Limpar filtros"
+    e erro com "Tentar de novo";
+  - "NFT em destaque" vindo de `/nfts/featured`, os 2 cards promocionais (levam a filtros reais) e o
+    "Diário da Cunhagem" estático;
+  - no mobile: busca + sheet de filtros (com a ordenação) e grid de 2 colunas desencontrado.
+- **Card:** o link do nome cobre o card. No desktop as ações (carrinho, favoritar e zoom num dialog) aparecem
+  no hover ou com o foco; no mobile, só o coração. Mostra os chips RARO e Esgotado.
+- **Detalhe:**
+  - galeria com miniaturas e zoom;
+  - edições como rádios, com `?edition=` na URL;
+  - quantidade limitada ao estoque e a 10;
+  - Comprar (adiciona e vai para `/carrinho`), adicionar ao carrinho e favoritar;
+  - abas Detalhes / Avaliações e "Mais desta coleção" (linha estática, `/nfts/:id/related`);
+  - telas de NFT inexistente, erro e skeleton;
+  - avisos de edição esgotada, inexistente e de tudo esgotado.
+  - No mobile: imagem com voltar e favoritar, sheet de informações e barra fixa de compra.
+- **Favoritos:** atualização otimista (`onMutate`, rollback no `onError` e `invalidateQueries` no `onSettled`),
+  com anúncio no `aria-live`. O visitante vai para `/login?redirect=…`.
+- **Carrinho:** `useCart` (do usuário ou de visitante), `useAddToCart` e o badge.
+- **Sessão mínima** (`features/auth/queries.ts`): `GET /auth/session` com o token salvo, só para ter o
+  `userId` das keys privadas. O login de verdade entra na Fase 4.
+- **Tempo real:** `nft.updated` agora atualiza lista, destaque, relacionados, favoritos e detalhe
+  (edições com versão própria). Anuncia mudança de preço, de estoque ou "esgotou".
+- **shadcn:** dialog, sheet, slider (com `thumbLabels` para o nome acessível de cada alça) e tabs. "Close" foi
+  traduzido para "Fechar".
+- **E2E (`catalog.spec.ts` e `nft-detail.spec.ts`, desktop e mobile):**
+  - cenário 1: filtro + ordenação, paginação, busca combinada, voltar duas vezes no histórico e reload,
+    comparando os cards com a resposta da API;
+  - estado vazio;
+  - cenário 12: skeletons no `slow`, e no `offline` o erro aparece e "Tentar de novo" recupera;
+  - cenário 2: acesso direto, NFT inexistente e navegação a partir do card;
+  - edição esgotada, limite de quantidade, compra levando ao carrinho com o badge, favoritar sem login,
+    favoritar otimista com rollback (`failNext`) e `nft.updated` no detalhe.
+  - **Resultado: 51 passando, 21 pulados (o contrato não roda no mobile).** Sem overflow horizontal em
+    390, 768 e 1024 px.
+
+### Decisões e desvios do Figma
+
+- **Mercado** leva para o catálogo da home (`/#catalogo`) e fica ativo no detalhe, como no frame.
+- **A busca** cria uma entrada no histórico no primeiro termo; refinar o termo só substitui a entrada.
+- **Faixa de preço:** `min`/`max` ficam como número na URL; a API recebe string decimal.
+- **Edição inicial:** a primeira com estoque. Se ela esgotar em tempo real, continua selecionada e aparece
+  o aviso, em vez de trocar sozinha.
+- **Ações do card:** o botão de carrinho adiciona 1 unidade da primeira edição com estoque.
+- **Acréscimos ao Figma:** no detalhe desktop há um botão "Adicionar ao carrinho" ao lado de COMPRAR, e a
+  trilha mostra o nome do NFT.
+- **Compartilhar** virou "Copiar link" + "E-mail" (`mailto:`), que funcionam de verdade. As redes sociais
+  ficam como "Em breve" no footer.
+- **A aba Avaliações** mostra só a nota e o total: a API não tem comentários.
+- **Itens "Em breve" (desabilitados):** Criadores, Aprenda, newsletter, redes sociais, colunas "Meu perfil"
+  e "Central de ajuda" do footer, "Ler mais" do blog e botão central da tab bar. As colunas de coleções do
+  footer filtram de verdade.
+- **Ícones:** −/+ do lucide (o Iconly não tem "Minus"); o resto é Iconly curved.
+- **Checkboxes:** os filtros usam checkbox nativo com `accent-color` cobre (o Figma mostra só o texto),
+  para ficar claro o que está marcado sem depender só de cor.
+- **Mobile:** as abas usam 15 px para caber em 390 px.
+- **Nota do Emerald Ape:** a seed diz 4,5 e o Figma mostra 4.8. A tela segue a API.
+
+### Pendências
+
+- `/login` e `/carrinho` são telas provisórias (`ComingSoon`); a Fase 4 as substitui. Os ícones de
+  Favoritos e Perfil da tab bar vão para `/login?redirect=…` até existirem as telas (Fases 4 e 6).
+- O header ainda não tem o estado logado (avatar + menu): Fase 4.
+- O `RealtimeBridge` continua sem token (Fase 4). Carrinho no tempo real (aviso de preço): Fase 4.
+- Fase 7: regressão visual.
+- Fase 8: Lighthouse. O preload do hero vale para todas as rotas; ver se pesa no detalhe.
+- Próxima: Fase 4.
