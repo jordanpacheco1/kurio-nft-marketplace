@@ -1,8 +1,10 @@
-import type { QueryClient } from '@tanstack/react-query'
+import type { Query, QueryClient } from '@tanstack/react-query'
 import type { Socket } from 'socket.io-client'
+import { pushCartNotice, type CartNotice } from '@/features/cart/notices'
 import { nftKeys } from '@/features/catalog/queries'
 import {
   nftUpdatedEventSchema,
+  type Cart,
   type Favorites,
   type Featured,
   type NftDetail,
@@ -30,6 +32,45 @@ function patchDetail(nft: NftDetail, event: NftUpdatedEvent): NftDetail {
     return { ...edition, priceEth: change.priceEth, available: change.available, version: change.version }
   })
   return { ...patchSummary(nft, event), editions }
+}
+
+const isCartQuery = (query: Query) =>
+  query.queryKey[0] === 'cart' || (query.queryKey[0] === 'me' && query.queryKey[2] === 'cart')
+const isQuoteQuery = (query: Query) => query.queryKey[0] === 'me' && query.queryKey[2] === 'quote'
+
+/**
+ * Carrinho aberto com o NFT do evento: gera os avisos de preço e estoque e manda o REST recalcular
+ * o carrinho e a cotação (o resumo nunca é recalculado no cliente). Devolve os avisos gerados.
+ */
+function reconcileCarts(queryClient: QueryClient, event: NftUpdatedEvent) {
+  const notices: CartNotice[] = []
+  for (const [, cart] of queryClient.getQueriesData<Cart>({ predicate: isCartQuery })) {
+    for (const item of cart?.items ?? []) {
+      const change = event.data.editions.find((edition) => edition.id === item.editionId)
+      if (item.nftId !== event.resource.id || !change || change.version <= item.version) continue
+      const label = `${item.name} (${item.editionLabel})`
+      if (compareEth(item.unitPriceEth, change.priceEth) !== 0) {
+        notices.push({
+          id: `price:${item.id}`,
+          text: `O preço de ${label} mudou de ${formatEth(item.unitPriceEth)} para ${formatEth(change.priceEth)}.`,
+        })
+      }
+      if (change.available < item.quantity) {
+        notices.push({
+          id: `stock:${item.id}`,
+          text:
+            change.available === 0
+              ? `${label} esgotou. Remova o item para continuar.`
+              : `Só restam ${change.available} unidades de ${label}. Ajuste a quantidade para continuar.`,
+        })
+      }
+    }
+  }
+  if (!notices.length) return notices
+  notices.forEach(pushCartNotice)
+  void queryClient.invalidateQueries({ predicate: isCartQuery })
+  void queryClient.invalidateQueries({ predicate: isQuoteQuery })
+  return notices
 }
 
 // Liga os eventos do socket ao cache do TanStack Query. Devolve a função de limpeza.
@@ -69,6 +110,13 @@ export function bindRealtimeToCache(socket: Socket, queryClient: QueryClient) {
       return patchDetail(nft, event)
     })
 
+    // O aviso do carrinho é o mais específico; ele vence o anúncio genérico do catálogo.
+    const cartNotices = reconcileCarts(queryClient, event)
+    if (cartNotices.length) {
+      announce(cartNotices.map((notice) => notice.text).join(' '))
+      return
+    }
+
     if (!before) return
     if (compareEth(before.priceEth, event.data.priceEth) !== 0) {
       announce(`${before.name} agora custa ${formatEth(event.data.priceEth)}`)
@@ -87,6 +135,7 @@ export function bindRealtimeToCache(socket: Socket, queryClient: QueryClient) {
   const onConnect = () => {
     if (!disconnectedOnce) return
     void queryClient.invalidateQueries({ queryKey: nftKeys.all })
+    void queryClient.invalidateQueries({ predicate: (query) => isCartQuery(query) || isQuoteQuery(query) })
   }
 
   socket.on('nft.updated', onNftUpdated)

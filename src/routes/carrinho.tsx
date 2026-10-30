@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { ComingSoon } from '@/shared/ui/coming-soon'
+import { CartPage } from '@/features/cart/components/cart-page'
 
-// Provisória: a tela do carrinho entra na Fase 4.
+// Pública: o visitante também tem carrinho (header `X-Cart-Id`). No login, ele é juntado ao da conta.
 export const Route = createFileRoute('/carrinho')({
-  component: () => <ComingSoon title="Carrinho" />,
+  component: CartPage,
 })
