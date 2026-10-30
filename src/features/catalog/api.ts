@@ -1,7 +1,7 @@
 import { api } from '@/shared/api/client'
-import { nftListSchema } from '@/shared/contracts/nft'
+import { nftListSchema, type NftListParams } from '@/shared/contracts'
 
-export type NftListParams = { page: number }
+export type { NftListParams }
 
 export async function fetchNfts(params: NftListParams, signal?: AbortSignal) {
   const { data } = await api.get('/nfts', { params, signal })

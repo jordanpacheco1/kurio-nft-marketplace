@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { nftListQuery } from '@/features/catalog/queries'
 import { Button } from '@/components/ui/button'
+import { formatEth } from '@/shared/money'
 
 const params = { page: 1 }
 
@@ -52,7 +53,7 @@ function HomePage() {
                   </picture>
                   <h2 className="text-body">{nft.name}</h2>
                   <p className="text-body font-bold text-copper-text" data-testid="nft-price">
-                    {nft.priceEth} ETH
+                    {formatEth(nft.priceEth)}
                   </p>
                 </li>
               ))}

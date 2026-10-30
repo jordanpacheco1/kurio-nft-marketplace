@@ -1,8 +1,9 @@
 import type { QueryClient } from '@tanstack/react-query'
 import type { Socket } from 'socket.io-client'
 import { nftKeys } from '@/features/catalog/queries'
-import { nftUpdatedEventSchema, type NftList } from '@/shared/contracts/nft'
+import { nftUpdatedEventSchema, type NftList } from '@/shared/contracts'
 import { createEventProcessor } from '@/shared/realtime/processor'
+import { formatEth } from '@/shared/money'
 import { announce } from '@/shared/ui/announcer'
 
 // Liga os eventos do socket ao cache do TanStack Query. Devolve a função de limpeza.
@@ -23,11 +24,11 @@ export function bindRealtimeToCache(socket: Socket, queryClient: QueryClient) {
         items: list.items.map((nft) => {
           if (nft.id !== event.resource.id || nft.version >= event.version) return nft
           name = nft.name
-          return { ...nft, priceEth: event.data.priceEth, version: event.version }
+          return { ...nft, priceEth: event.data.priceEth, available: event.data.available, version: event.version }
         }),
       }
     })
-    if (name) announce(`${name} agora custa ${event.data.priceEth} ETH`)
+    if (name) announce(`${name} agora custa ${formatEth(event.data.priceEth)}`)
   }
 
   const onDisconnect = () => {
