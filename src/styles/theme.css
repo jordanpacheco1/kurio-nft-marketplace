@@ -1,0 +1,209 @@
+/*
+ * Kurio — tema Tailwind v4 + shadcn/ui
+ * Valores extraídos do .fig (coleções de variáveis "Design Tokens" e "Cores / Café",
+ * 67 estilos de texto e os 15 frames). O layout só tem modo escuro.
+ *
+ * Fontes self-hosted (exigência de rodar local):
+ *   npm i @fontsource-variable/roboto-mono @fontsource/inter
+ *   // main.tsx
+ *   import '@fontsource-variable/roboto-mono'
+ *   import '@fontsource/inter/600.css'   // só os títulos e o "Ler mais" dos cards do blog
+ */
+
+@import "tailwindcss";
+@import "tw-animate-css";
+
+:root {
+  /* ---- Paleta do Figma ---------------------------------------------- */
+  --ink: #140d0a;            /* bg/default · color/ink — fundo de página */
+  --ink-deep: #0e0907;       /* color/ink-deep */
+  --ink-soft: #1c110c;       /* color/ink-soft */
+  --surface-card: #241612;   /* surface/2 — cards, sidebar, modais, footer */
+  --surface-raised: #2f1d15; /* surface/3 — hover, chips, pílulas mobile */
+  --surface-band: #38220f;   /* color/surface-dark — faixa da marca no footer */
+  --line: #3f2319;           /* border/default — divisores */
+  --line-strong: #55321f;    /* border/strong */
+
+  --cream: #f7f3ec;          /* text/primary */
+  --cream-alt: #f5f1eb;      /* color/foreground — Figma usa os dois quase igual */
+  --sand: #cfb28c;           /* text/secondary — parágrafos, metadados */
+  --sand-muted: #b0916a;     /* text/muted — ID do token, coleção, atributos */
+  --khaki: #b39463;          /* color/secondary */
+
+  --copper: #d28a4c;         /* accent/default · color/primary */
+  --copper-light: #dd9a5f;   /* color/primary-light */
+  --copper-dark: #c47b3e;    /* color/primary-dark — hover do botão */
+  --copper-text: #e89b55;    /* text/accent — títulos de seção, links */
+
+  --amber: #e3a44e;          /* functional/rating — estrelas */
+  --coral: #f0805f;          /* functional/danger — asterisco de obrigatório, erros */
+  --success: #00a66c;        /* color/success */
+
+  /* Ajuste de acessibilidade (documentar no ARCHITECTURE.md):
+     a borda dos inputs no Figma (#3F2319) tem contraste 1.34:1 com o fundo.
+     #816043 é o tom mais próximo que passa 3:1 (WCAG 1.4.11) no fundo e no card.
+     Divisores decorativos continuam com --line. */
+  --field-border: #816043;
+
+  /* ---- Variáveis semânticas do shadcn/ui ----------------------------- */
+  --background: var(--ink);
+  --foreground: var(--cream);
+  --card: var(--surface-card);
+  --card-foreground: var(--cream);
+  --popover: var(--surface-card);
+  --popover-foreground: var(--cream);
+  --primary: var(--copper);
+  --primary-foreground: var(--ink);   /* texto escuro no botão cobre: 6.85:1 */
+  --secondary: var(--surface-raised);
+  --secondary-foreground: var(--cream);
+  --muted: var(--surface-raised);
+  --muted-foreground: var(--sand-muted);
+  --accent: var(--surface-raised);    /* no shadcn "accent" é fundo de hover, não a cor da marca */
+  --accent-foreground: var(--cream);
+  --destructive: var(--coral);
+  --border: var(--line);
+  --input: var(--field-border);
+  --ring: var(--copper);
+
+  /* 5px: com as fórmulas do shadcn dá md = 3px (inputs e botões do perfil),
+     lg = 5px (modais de login), xl = 9px (cards, 8px no Figma). */
+  --radius: 0.3125rem;
+}
+
+@theme inline {
+  /* Cores do shadcn */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Cores do Kurio: bg-surface-raised, text-fg-muted, text-copper-text, bg-band… */
+  --color-ink: var(--ink);
+  --color-ink-deep: var(--ink-deep);
+  --color-ink-soft: var(--ink-soft);
+  --color-surface: var(--surface-card);
+  --color-surface-raised: var(--surface-raised);
+  --color-band: var(--surface-band);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--cream);
+  --color-fg-alt: var(--cream-alt);
+  --color-fg-secondary: var(--sand);
+  --color-fg-muted: var(--sand-muted);
+  --color-khaki: var(--khaki);
+  --color-copper: var(--copper);
+  --color-copper-light: var(--copper-light);
+  --color-copper-dark: var(--copper-dark);
+  --color-copper-text: var(--copper-text);
+  --color-rating: var(--amber);
+  --color-danger: var(--coral);
+  --color-success: var(--success);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  /* Mobile usa os padrões do Tailwind: 2xl = 16px (cards), 4xl = 32px (sheets),
+     full (pílulas de 40px); botões cheios do login mobile = rounded-[10px]. */
+
+  /* Tipografia: o layout é 100% Roboto Mono */
+  --font-sans: "Roboto Mono Variable", "Roboto Mono", ui-monospace, monospace;
+  --font-mono: "Roboto Mono Variable", "Roboto Mono", ui-monospace, monospace;
+  --font-inter: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+@theme {
+  /* Escala de texto. Tamanhos que o Tailwind já tem (12, 14, 16, 18, 20, 24)
+     ficam com os utilitários padrão: text-xs, text-sm, text-base, text-lg…
+     Pesos usados: 400, 500 e 700. */
+  --text-micro: 0.5625rem;                 /* 9px  — chips METAMASK • WALLETCONNECT */
+  --text-micro--line-height: 1;
+  --text-tiny: 0.625rem;                   /* 10px */
+  --text-tiny--line-height: 1;
+  --text-caption: 0.8125rem;               /* 13px */
+  --text-caption--line-height: 1.25rem;
+  --text-body: 0.9375rem;                  /* 15px — o tamanho mais usado */
+  --text-body--line-height: 1.25rem;
+  --text-tab: 1.0625rem;                   /* 17px — abas do detalhe, títulos de seção */
+  --text-tab--line-height: 1.25rem;
+  --text-title: 1.375rem;                  /* 22px — preço no detalhe, "Oferta limitada" */
+  --text-title--line-height: 1.75rem;
+  --text-heading: 1.75rem;                 /* 28px — nome do NFT, "Diário da Cunhagem" */
+  --text-heading--line-height: 2.25rem;
+  --text-logo: 2rem;                       /* 32px — KURIO no login mobile (tracking 10%) */
+  --text-logo--line-height: 1;
+  --text-logo--letter-spacing: 0.1em;
+  --text-display: 2.6875rem;               /* 43px — hero desktop, caixa alta */
+  --text-display--line-height: 4.375rem;   /* 70px */
+
+  /* Parágrafos no Figma: 14px com 22–24px de entrelinha → use leading-6 */
+
+  --container-page: 75rem;                 /* 1200px — header, seções e footer */
+
+  --shadow-card: 0 4px 12px rgb(20 13 10 / 0.15);
+  --shadow-float: 0 6px 20px rgb(10 6 4 / 0.45);   /* modais, cards mobile */
+  --shadow-glow: 0 0 20px rgb(10 6 4 / 0.45);
+  --shadow-sheet: 0 -10px 30px rgb(10 6 4 / 0.45); /* sheet inferior no mobile */
+
+  --animate-shimmer: shimmer 1.6s ease-in-out infinite;
+
+  @keyframes shimmer {
+    from { background-position: 150% 0; }
+    to { background-position: -50% 0; }
+  }
+}
+
+/* CTA cheio do mobile (Conectar e finalizar, Confirmar compra):
+   cobre → cobre 80% sobre o fundo escuro. Fim amostrado do PNG: #B57642. */
+@utility bg-cta-gradient {
+  background-image: linear-gradient(90deg, var(--copper) 0%, #b57642 100%);
+}
+
+/* Cards do mobile: surface/2 → surface/3 */
+@utility bg-card-gradient {
+  background-image: linear-gradient(180deg, var(--surface-card) 0%, var(--surface-raised) 100%);
+}
+
+/* Skeleton com shimmer (exigido no enunciado). Sem animação com movimento reduzido. */
+@utility skeleton {
+  border-radius: var(--radius-md);
+  background-color: var(--surface-card);
+  background-image: linear-gradient(
+    90deg,
+    var(--surface-card) 0%,
+    var(--surface-raised) 50%,
+    var(--surface-card) 100%
+  );
+  background-size: 200% 100%;
+  animation: var(--animate-shimmer);
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    background-image: none;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}
