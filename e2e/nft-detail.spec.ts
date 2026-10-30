@@ -45,7 +45,9 @@ test('quantidade respeita o estoque da edição e compra leva ao carrinho', asyn
 
   await page.getByRole('button', { name: /Comprar/ }).click()
   await expect(page).toHaveURL('/carrinho')
-  await expect(page.getByRole('link', { name: 'Carrinho, 7 itens' })).toBeVisible()
+  await expect(
+    page.getByRole('group', { name: 'Quantidade de Emerald Ape #042 (1/10)' }).getByRole('status'),
+  ).toHaveText('7')
 })
 
 test('visitante que favorita vai para o login e volta para o NFT', async ({ page, isMobile }) => {

@@ -47,3 +47,33 @@ export async function login(page: Page, email = 'colecionador@kurio.test') {
   if (result.status !== 200) throw new Error(`login falhou: ${result.status}`)
   return result.body
 }
+
+/** Id do carrinho de visitante que o app criou (header `X-Cart-Id`). */
+export async function guestCartId(page: Page) {
+  await page.waitForFunction(() => !!localStorage.getItem('kurio.cartId'))
+  return page.evaluate(() => localStorage.getItem('kurio.cartId')!)
+}
+
+type Line = { nftId: string; editionId: string; quantity: number }
+
+/** Põe itens no carrinho pela API: de visitante (`cartId`) ou do usuário (`token`). */
+export async function seedCart(page: Page, lines: Line[], auth: { cartId?: string; token?: string }) {
+  for (const body of lines) {
+    const result = await call(page, 'POST', '/cart/items', { body, ...auth })
+    if (result.status >= 300) throw new Error(`seedCart falhou: ${result.status}`)
+  }
+}
+
+/** Valor da API como a interface mostra (`formatEth`): pelo menos 2 casas. */
+export function eth(value: string) {
+  const [int, dec = ''] = value.split('.')
+  return `${int}.${dec.padEnd(2, '0')} ETH`
+}
+
+/** Preenche e envia o formulário de login (dialog no desktop, página no mobile). */
+export async function signIn(page: Page, email = 'colecionador@kurio.test', password = PASSWORD) {
+  const form = page.getByRole('form', { name: 'Entrar' })
+  await form.getByLabel('E-mail').fill(email)
+  await form.getByLabel('Senha', { exact: true }).fill(password)
+  await form.getByRole('button', { name: 'Entrar', exact: true }).click()
+}

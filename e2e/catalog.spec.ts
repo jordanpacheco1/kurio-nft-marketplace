@@ -57,6 +57,7 @@ test('busca, filtros combinados, ordenação, paginação e restauração pelo h
 
   // O estado vem da URL: recarregar mantém filtros e ordenação
   await page.reload()
+  await page.waitForFunction(() => !!window.__kurio) // o fetch do teste só passa pelo MSW depois do worker ativo
   await expect(cardNames(page)).toHaveText(await expectedNames(page, 'networks=ethereum&sort=price-asc&page=1'))
   if (isMobile) await page.getByRole('button', { name: /^Filtros/ }).click()
   await expect(page.getByRole('checkbox', { name: /^Ethereum/ })).toBeChecked()
