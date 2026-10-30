@@ -18,10 +18,13 @@ export default defineConfig([
     files: ['**/*.{ts,tsx}'],
     extends: [js.configs.recommended, tseslint.configs.recommended, reactHooks.configs.flat.recommended],
     languageOptions: { ecmaVersion: 2023, globals: globals.browser },
+    rules: {
+      '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true, argsIgnorePattern: '^_' }],
+    },
   },
   {
     files: ['src/**/*.tsx'],
-    ignores: ['src/routes/**', 'src/components/ui/**'],
+    ignores: ['src/routes/**', 'src/components/ui/**', 'src/mocks/**'],
     extends: [reactRefresh.configs.vite],
   },
 ])
